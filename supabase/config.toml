@@ -1,0 +1,33 @@
+# Configuración mínima de Supabase para este repositorio.
+# El proyecto remoto se vincula con `supabase link`. Lo de Auth de abajo
+# se aplica al remoto con `supabase config push` (o a mano en el panel).
+project_id = "juego-conferencia"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+
+[db]
+port = 54322
+major_version = 17
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3001"]
+# R76: contraseña de 6 caracteres como mínimo, sin otras exigencias.
+minimum_password_length = 6
+password_requirements = ""
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+# P72 (aprobada): sin confirmación de email; sólo el dominio de Vortex.
+enable_confirmations = false
+double_confirm_changes = false
+secure_password_change = false
+
+[storage]
+enabled = true
+file_size_limit = "2MiB"

@@ -1,0 +1,20 @@
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Variables de entorno: nunca se suben
+.env
+.env*.local
+
+# Vercel y Supabase (archivos locales)
+.vercel/
+supabase/.temp/
+supabase/.branches/
+
+# Sistema
+.DS_Store
+Thumbs.db
+npm-debug.log*

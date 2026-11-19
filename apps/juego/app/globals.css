@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+/* Marca provisoria: no hay lineamientos de Vortex todavía (P16). */
+@theme {
+  --color-brand: #5b3df5;
+  --color-brand-strong: #4527d6;
+  --color-brand-soft: #ece8ff;
+  --color-ink: #17142b;
+  --color-muted: #6b6785;
+  --color-line: #e3e0f0;
+  --color-surface: #ffffff;
+  --color-canvas: #f6f5fb;
+  --color-ok: #0f8a5f;
+  --color-ok-soft: #e3f6ee;
+  --color-bad: #c23b3b;
+  --color-bad-soft: #fbe9e9;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html,
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+}
