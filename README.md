@@ -17,6 +17,10 @@ supabase/
 
 **Principio de seguridad:** el navegador nunca recibe la respuesta correcta. Las 3 opciones las arma la función `start_encounter` en la base, y la corrección la hace `answer_turn`. La tabla de turnos no se puede leer desde el navegador.
 
+## Estado
+
+La base de datos está en Supabase (proyecto `juego-conferencia-2026`). Cada app se despliega como un proyecto de Vercel propio sobre este repositorio: `apps/admin` y `apps/juego`.
+
 ## Requisitos
 
 - Node 20.9 o superior y npm.
