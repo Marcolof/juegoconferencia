@@ -3,12 +3,35 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { CircleHelp, ListChecks, LogOut, PencilLine, QrCode, ScanQrCode } from "lucide-react";
 import { takePendingQr, usePlayer } from "@/lib/player";
 import { useActiveEncounterRedirect } from "@/lib/encounters";
 import { usePhotoUrls } from "@/lib/photos";
 import { Ranking } from "@/components/Ranking";
 import { Tour } from "@/components/Tour";
 import { Avatar, LinkButton, PlayerGate, Screen, signOutAndGo } from "@/components/ui";
+
+// Recuerda en la sesión que el tour ya se vio, por si la base tarda en guardarlo.
+const TOUR_SEEN_KEY = "juego:tour-visto";
+
+function tourSeenInSession(): boolean {
+  try {
+    return sessionStorage.getItem(TOUR_SEEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markTourSeenInSession() {
+  try {
+    sessionStorage.setItem(TOUR_SEEN_KEY, "1");
+  } catch {
+    /* sin almacenamiento: alcanza con lo guardado en la cuenta */
+  }
+}
+
+const chip =
+  "flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-surface px-3 text-sm font-semibold text-ink ring-1 ring-line transition active:bg-brand-soft";
 
 export default function PrincipalPage() {
   const router = useRouter();
@@ -17,15 +40,21 @@ export default function PrincipalPage() {
   useActiveEncounterRedirect(status === "ok" ? supabase : null, state?.id);
   const [tourOpen, setTourOpen] = useState(false);
 
-  // La primera vez que llega a la pantalla principal se abre el tour (R84).
+  // El tour se abre sólo la primera vez que la cuenta llega a la principal (R84).
   useEffect(() => {
-    if (status === "ok" && state && !state.tour_done) setTourOpen(true);
+    if (status === "ok" && state && !state.tour_done && !tourSeenInSession()) setTourOpen(true);
   }, [status, state]);
 
-  const closeTour = useCallback(() => {
+  const closeTour = useCallback(async () => {
     setTourOpen(false);
-    if (state && !state.tour_done && supabase) void supabase.rpc("mark_tour_done");
+    markTourSeenInSession();
+    if (state && !state.tour_done && supabase) {
+      // El pedido a Supabase sólo se envía cuando se espera: sin el await no llegaba
+      // a la base y el tour se volvía a abrir al regresar a esta pantalla (F35).
+      await supabase.rpc("mark_tour_done");
+    }
   }, [state, supabase]);
+  const onTourClose = useCallback(() => void closeTour(), [closeTour]);
 
   // Si entró escaneando un QR con la cámara del teléfono, se retoma ese QR.
   useEffect(() => {
@@ -47,38 +76,49 @@ export default function PrincipalPage() {
             size={48}
           />
         </Link>
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <p className="text-sm text-muted">Hola,</p>
-          <p className="text-lg font-bold leading-tight">{state.first_name}</p>
+          <p className="truncate text-lg font-bold leading-tight">{state.first_name}</p>
         </div>
-        <button onClick={() => void signOutAndGo()} className="text-sm text-muted underline-offset-4 hover:underline">
+        <button
+          onClick={() => void signOutAndGo()}
+          className="flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-medium text-muted transition hover:bg-surface active:bg-surface"
+        >
+          <LogOut size={18} aria-hidden />
           Salir
         </button>
       </header>
 
-      <div className="mb-5 grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <LinkButton href="/mi-qr" className="min-h-24 flex-col text-lg">
-          <span aria-hidden className="text-2xl">▣</span>
+          <QrCode size={30} aria-hidden />
           Mostrar mi QR
         </LinkButton>
         <LinkButton href="/escanear" variant="secondary" className="min-h-24 flex-col text-lg">
-          <span aria-hidden className="text-2xl">⌖</span>
+          <ScanQrCode size={30} aria-hidden />
           Escanear QR
         </LinkButton>
       </div>
 
+      {/* Accesos secundarios arriba del ranking, para que no queden fuera de la vista (F35). */}
+      <nav aria-label="Más opciones" className="mb-5 mt-3 grid grid-cols-2 gap-3">
+        <Link href="/respuestas" className={chip}>
+          {state.answers_locked ? (
+            <ListChecks size={18} className="text-brand" aria-hidden />
+          ) : (
+            <PencilLine size={18} className="text-brand" aria-hidden />
+          )}
+          Mis respuestas
+        </Link>
+        <button type="button" onClick={() => setTourOpen(true)} className={chip}>
+          <CircleHelp size={18} className="text-brand" aria-hidden />
+          Cómo se juega
+        </button>
+      </nav>
+
       <Ranking supabase={supabase} playerId={state.id} />
 
-      <p className="mt-6 flex justify-center gap-5 text-sm">
-        <Link href="/respuestas" className="text-brand underline-offset-4 hover:underline">
-          {state.answers_locked ? "Ver mis respuestas" : "Editar mis respuestas"}
-        </Link>
-        <button onClick={() => setTourOpen(true)} className="text-brand underline-offset-4 hover:underline">
-          ¿Cómo se juega?
-        </button>
-      </p>
-
-      <Tour open={tourOpen} onClose={closeTour} />
+      <Tour open={tourOpen} onClose={onTourClose} />
     </Screen>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Check, X } from "lucide-react";
 import { gameErrorMessage, type EncounterView } from "@juego/shared";
 import { usePlayer } from "@/lib/player";
 import { usePhotoUrls } from "@/lib/photos";
@@ -169,7 +170,7 @@ export default function EncuentroPage() {
             {turn.options.map((opt, i) => (
               <li
                 key={i}
-                className={`rounded-xl px-4 py-3 text-sm ${
+                className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${
                   i === turn.correct_index
                     ? "bg-ok-soft font-semibold text-ok"
                     : i === turn.chosen_index
@@ -177,9 +178,12 @@ export default function EncuentroPage() {
                       : "bg-canvas"
                 }`}
               >
-                {opt}
-                {i === turn.correct_index && " ✓"}
-                {i === turn.chosen_index && i !== turn.correct_index && " (tu elección)"}
+                <span className="flex-1">
+                  {opt}
+                  {i === turn.chosen_index && i !== turn.correct_index && " (tu elección)"}
+                </span>
+                {i === turn.correct_index && <Check size={18} strokeWidth={3} aria-label="Correcta" />}
+                {i === turn.chosen_index && i !== turn.correct_index && <X size={18} strokeWidth={3} aria-hidden />}
               </li>
             ))}
           </ul>

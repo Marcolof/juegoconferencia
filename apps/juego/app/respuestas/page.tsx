@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, Check } from "lucide-react";
 import { MAX_ANSWER_LENGTH, gameErrorMessage, type Question } from "@juego/shared";
 import { usePlayer } from "@/lib/player";
 import { Button, Notice, PlayerGate, Screen, Spinner } from "@/components/ui";
@@ -138,7 +139,7 @@ export default function RespuestasPage() {
                         on ? "bg-brand text-white" : "bg-canvas ring-1 ring-line"
                       }`}
                     >
-                      {on ? "✓" : ""}
+                      {on && <Check size={16} strokeWidth={3} />}
                     </span>
                     <span className="flex-1 text-base">{q.text}</span>
                     {q.is_fixed && <span className="shrink-0 text-xs font-medium text-muted">obligatoria</span>}
@@ -171,9 +172,10 @@ export default function RespuestasPage() {
       <button
         type="button"
         onClick={() => setStep("elegir")}
-        className="mb-3 self-start text-sm text-brand underline-offset-4 hover:underline"
+        className="mb-3 flex items-center gap-1.5 self-start text-sm font-medium text-brand underline-offset-4 hover:underline"
       >
-        ← Cambiar las preguntas
+        <ArrowLeft size={16} aria-hidden />
+        Cambiar las preguntas
       </button>
       <p className="text-muted">
         Contestá en pocas palabras. Podés cambiarlas hasta tu primer encuentro.

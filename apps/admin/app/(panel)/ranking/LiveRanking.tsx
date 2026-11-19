@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { PHOTOS_BUCKET, type RankingRow } from "@juego/shared";
 import { getBrowserClient } from "@/lib/supabase-browser";
 import { Initials } from "@/components/ui";
@@ -67,8 +68,9 @@ export function LiveRanking() {
         </p>
         <button
           onClick={() => setBig((b) => !b)}
-          className="rounded-lg bg-surface px-4 py-2 text-sm font-semibold ring-1 ring-line hover:bg-canvas"
+          className="flex items-center gap-2 rounded-lg bg-surface px-4 py-2 text-sm font-semibold ring-1 ring-line hover:bg-canvas"
         >
+          {big ? <Minimize2 size={16} aria-hidden /> : <Maximize2 size={16} aria-hidden />}
           {big ? "Salir de pantalla grande" : "Pantalla grande"}
         </button>
       </div>

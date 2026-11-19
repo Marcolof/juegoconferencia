@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Los componentes compartidos (paginador) también usan clases de Tailwind. */
+@source "../../../packages/shared/src";
 
 /* Marca provisoria: no hay lineamientos de Vortex todavía (P16). */
 @theme {

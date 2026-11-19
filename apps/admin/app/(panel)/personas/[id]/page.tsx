@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { PHOTOS_BUCKET } from "@juego/shared";
 import { requireAdmin } from "@/lib/supabase-server";
 import {
@@ -68,8 +69,12 @@ export default async function PersonaPage({
 
   return (
     <>
-      <Link href="/personas" className="text-sm text-brand">
-        ← Personas
+      <Link
+        href={p.role === "admin" ? "/personas?rol=admin" : "/personas"}
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand"
+      >
+        <ArrowLeft size={16} aria-hidden />
+        Personas
       </Link>
       <div className="mb-6 mt-3 flex flex-wrap items-center gap-4">
         <Initials firstName={p.first_name} lastName={p.last_name} url={photo.data?.signedUrl} size={64} />

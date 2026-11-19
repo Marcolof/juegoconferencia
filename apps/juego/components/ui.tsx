@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { initials } from "@juego/shared";
 import type { PlayerStatus } from "@/lib/player";
 import { getSupabase } from "@/lib/supabase";
@@ -22,9 +23,9 @@ export function Screen({
             <Link
               href={back}
               aria-label="Volver"
-              className="grid size-10 place-items-center rounded-full bg-surface text-xl shadow-sm"
+              className="grid size-10 shrink-0 place-items-center rounded-full bg-surface text-ink shadow-sm transition active:bg-brand-soft"
             >
-              ←
+              <ArrowLeft size={20} aria-hidden />
             </Link>
           )}
           {title && <h1 className="text-xl font-bold">{title}</h1>}

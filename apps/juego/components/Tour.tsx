@@ -1,31 +1,32 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { MessagesSquare, QrCode, Trophy, Users, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui";
 
-/** Pasos del tour de bienvenida (F34, R83). */
-const STEPS = [
+/** Pasos del tour de bienvenida (F34, R83). Íconos de Lucide (F35). */
+const STEPS: readonly { icon: LucideIcon; title: string; text: string }[] = [
   {
-    icon: "👋",
+    icon: Users,
     title: "Conocé gente nueva",
     text: "El objetivo es charlar con personas de la convención y descubrir algo de cada una. Cada vez que adivinás una respuesta, sumás 1 punto.",
   },
   {
-    icon: "▣",
+    icon: QrCode,
     title: "Mostrá o escaneá un QR",
     text: "Con «Escanear QR» leés el código de otra persona y empieza el encuentro. Con «Mostrar mi QR» dejás que te escaneen a vos. Cada pareja juega una sola vez.",
   },
   {
-    icon: "💬",
+    icon: MessagesSquare,
     title: "Charlá y elegí",
     text: "Vas a ver una pregunta sobre la otra persona con 3 opciones: una es la verdadera. Preguntale y elegí. Después le toca a ella con una pregunta sobre vos. Tienen 5 minutos.",
   },
   {
-    icon: "🏆",
+    icon: Trophy,
     title: "Mirá el ranking",
-    text: "Abajo ves el ranking con tu puesto. Tus respuestas las podés cambiar con «Editar mis respuestas» hasta tu primer encuentro.",
+    text: "Abajo ves el ranking con tu puesto y, con «Ver ranking completo», a todos los jugadores. Tus respuestas las podés cambiar con «Mis respuestas» hasta tu primer encuentro.",
   },
-] as const;
+];
 
 /**
  * Tour de bienvenida: se muestra la primera vez que el jugador llega a la
@@ -51,6 +52,7 @@ export function Tour({ open, onClose }: { open: boolean; onClose: () => void }) 
 
   if (!open) return null;
   const step = STEPS[i];
+  const Icon = step.icon;
   const last = i === STEPS.length - 1;
 
   return (
@@ -72,8 +74,8 @@ export function Tour({ open, onClose }: { open: boolean; onClose: () => void }) 
           )}
         </div>
 
-        <div aria-hidden className="mt-4 text-4xl">
-          {step.icon}
+        <div aria-hidden className="mt-4 grid size-14 place-items-center rounded-2xl bg-brand-soft text-brand">
+          <Icon size={28} />
         </div>
         <h2 id="tour-title" ref={titleRef} tabIndex={-1} className="mt-3 text-xl font-bold outline-none">
           {step.title}

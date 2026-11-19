@@ -8,8 +8,11 @@ export const MAX_ANSWER_LENGTH = 30;
 /** Largo mínimo de la contraseña (R76). Coincide con el mínimo de Supabase. */
 export const MIN_PASSWORD_LENGTH = 6;
 
-/** Cantidad de puestos del ranking que ve el jugador (P76). */
-export const PLAYER_RANKING_TOP = 10;
+/** Puestos del ranking que se ven en la pantalla principal (F35, R85). */
+export const PLAYER_RANKING_TOP = 8;
+
+/** Jugadores por página en el ranking completo (F35, R86). */
+export const RANKING_PAGE_SIZE = 20;
 
 /** Nombre del bucket de Storage donde van las fotos. */
 export const PHOTOS_BUCKET = "fotos";
@@ -58,6 +61,15 @@ export interface MyRanking {
   place: number | null;
   points: number;
   total_players: number;
+}
+
+/** Una página del ranking completo, con búsqueda por nombre (R86). */
+export interface RankingPage {
+  rows: RankingRow[];
+  /** Total de jugadores que coinciden con la búsqueda. */
+  total: number;
+  page: number;
+  page_size: number;
 }
 
 export interface PublicSettings {
