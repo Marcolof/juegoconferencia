@@ -2,18 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, PencilLine } from "lucide-react";
 import { MAX_ANSWER_LENGTH, gameErrorMessage, type Question } from "@juego/shared";
 import { usePlayer } from "@/lib/player";
 import { Button, Notice, PlayerGate, Screen, Spinner } from "@/components/ui";
 
-type Step = "elegir" | "responder";
+type Step = "resumen" | "elegir" | "responder";
 
 /**
  * Cuestionario en dos pasos (F34, R80 a R82):
  * 1. Elegir qué preguntas responder. Las fijas vienen marcadas y no se desmarcan.
  * 2. Responder sólo las elegidas.
  * El botón para avanzar queda flotando abajo para que se vea con la lista larga.
+ * Si ya las había guardado, primero ve sólo sus preguntas y un botón para
+ * editarlas (F36, R89).
  */
 export default function RespuestasPage() {
   const router = useRouter();
@@ -21,13 +23,15 @@ export default function RespuestasPage() {
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [values, setValues] = useState<Record<string, string>>({});
-  const [step, setStep] = useState<Step>("elegir");
+  const [step, setStep] = useState<Step | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (status !== "ok" || !supabase || !state) return;
     setValues(state.answers);
+    // Con las respuestas ya guardadas arranca en el resumen; si no, en elegir.
+    setStep((s) => s ?? (state.answers_ready ? "resumen" : "elegir"));
     supabase
       .from("questions")
       .select("id, position, text, is_fixed")
@@ -83,25 +87,56 @@ export default function RespuestasPage() {
     router.replace("/");
   }
 
+  // Sólo las preguntas que ya eligió y guardó, con su respuesta.
+  const savedList = !questions ? (
+    <Spinner />
+  ) : (
+    <dl className="mt-6 flex flex-col gap-3">
+      {questions
+        .filter((q) => state.answers[String(q.id)] !== undefined)
+        .map((q) => (
+          <div key={q.id} className="rounded-2xl bg-surface p-4 shadow-sm">
+            <dt className="text-sm text-muted">{q.text}</dt>
+            <dd className="mt-1 font-semibold">{state.answers[String(q.id)]}</dd>
+          </div>
+        ))}
+    </dl>
+  );
+  const savedCount = Object.keys(state.answers).length;
+
   // ---------- Respuestas ya fijas: sólo lectura ----------
   if (locked) {
     return (
-      <Screen title="Tus respuestas" back="/">
+      <Screen title="Tus preguntas" back="/">
         <Notice>Ya jugaste tu primer encuentro: tus respuestas quedaron fijas.</Notice>
-        {!questions ? (
-          <Spinner />
-        ) : (
-          <dl className="mt-6 flex flex-col gap-4">
-            {questions
-              .filter((q) => state.answers[String(q.id)] !== undefined)
-              .map((q) => (
-                <div key={q.id} className="rounded-2xl bg-surface p-4 shadow-sm">
-                  <dt className="text-sm text-muted">{q.text}</dt>
-                  <dd className="mt-1 font-semibold">{state.answers[String(q.id)]}</dd>
-                </div>
-              ))}
-          </dl>
-        )}
+        {savedList}
+      </Screen>
+    );
+  }
+
+  if (!step) {
+    return (
+      <Screen>
+        <Spinner />
+      </Screen>
+    );
+  }
+
+  // ---------- Resumen: las preguntas elegidas y un botón para editarlas (R89) ----------
+  if (step === "resumen") {
+    return (
+      <Screen title="Tus preguntas" back="/">
+        <p className="text-muted">
+          Elegiste {savedCount} {savedCount === 1 ? "pregunta" : "preguntas"}. Otros jugadores van a tener que adivinar
+          tus respuestas charlando con vos. Podés cambiarlas hasta tu primer encuentro.
+        </p>
+        <div className="pb-28">{savedList}</div>
+        <BottomBar>
+          <Button type="button" onClick={() => setStep("elegir")} disabled={!questions}>
+            <PencilLine size={18} aria-hidden />
+            Editar preguntas
+          </Button>
+        </BottomBar>
       </Screen>
     );
   }
