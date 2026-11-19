@@ -7,6 +7,8 @@ import { CircleHelp, ListChecks, LogOut, PencilLine, QrCode, ScanQrCode } from "
 import { takePendingQr, usePlayer } from "@/lib/player";
 import { useActiveEncounterRedirect } from "@/lib/encounters";
 import { usePhotoUrls } from "@/lib/photos";
+import { useCompetition } from "@/lib/competition";
+import { CompetitionNotice } from "@/components/CompetitionNotice";
 import { Ranking } from "@/components/Ranking";
 import { Tour } from "@/components/Tour";
 import { Avatar, LinkButton, PlayerGate, Screen, signOutAndGo } from "@/components/ui";
@@ -39,6 +41,7 @@ export default function PrincipalPage() {
   const photo = usePhotoUrls([state?.photo_path]);
   useActiveEncounterRedirect(status === "ok" ? supabase : null, state?.id);
   const [tourOpen, setTourOpen] = useState(false);
+  const comp = useCompetition(state);
 
   // El tour se abre sólo la primera vez que la cuenta llega a la principal (R84).
   useEffect(() => {
@@ -89,16 +92,32 @@ export default function PrincipalPage() {
         </button>
       </header>
 
-      <div className="grid grid-cols-2 gap-3">
-        <LinkButton href="/mi-qr" className="min-h-24 flex-col text-lg">
-          <QrCode size={30} aria-hidden />
-          Mostrar mi QR
-        </LinkButton>
-        <LinkButton href="/escanear" variant="secondary" className="min-h-24 flex-col text-lg">
-          <ScanQrCode size={30} aria-hidden />
-          Escanear QR
-        </LinkButton>
-      </div>
+      <CompetitionNotice phase={comp.phase} paused={comp.paused} start={comp.start} end={comp.end} />
+
+      {comp.canScan ? (
+        <div className="grid grid-cols-2 gap-3">
+          <LinkButton href="/mi-qr" className="min-h-24 flex-col text-lg">
+            <QrCode size={30} aria-hidden />
+            Mostrar mi QR
+          </LinkButton>
+          <LinkButton href="/escanear" variant="secondary" className="min-h-24 flex-col text-lg">
+            <ScanQrCode size={30} aria-hidden />
+            Escanear QR
+          </LinkButton>
+        </div>
+      ) : (
+        // Fuera de la competencia los botones de QR quedan a la vista pero bloqueados.
+        <div className="grid grid-cols-2 gap-3" aria-disabled>
+          <div className="flex min-h-24 cursor-not-allowed flex-col items-center justify-center gap-2 rounded-2xl bg-brand/40 text-lg font-semibold text-white/90">
+            <QrCode size={30} aria-hidden />
+            Mostrar mi QR
+          </div>
+          <div className="flex min-h-24 cursor-not-allowed flex-col items-center justify-center gap-2 rounded-2xl bg-surface text-lg font-semibold text-muted opacity-60 ring-1 ring-line">
+            <ScanQrCode size={30} aria-hidden />
+            Escanear QR
+          </div>
+        </div>
+      )}
 
       {/* Accesos secundarios arriba del ranking, para que no queden fuera de la vista (F35). */}
       <nav aria-label="Más opciones" className="mb-5 mt-3 grid grid-cols-2 gap-3">

@@ -76,8 +76,78 @@ export interface PublicSettings {
   email_domain: string | null;
   encounter_minutes: number;
   game_open: boolean;
-  /** Mínimo de preguntas que cada jugador responde (R81). */
+  /** Cantidad exacta de preguntas que cada jugador responde (R92). */
   min_answers: number;
+  /** Preguntas que cada uno responde dentro de un encuentro (R93). */
+  questions_per_encounter: number;
+  competition_start: string | null;
+  competition_end: string | null;
+}
+
+/** Fases de la competencia (R94). */
+export type CompetitionPhase = "antes" | "en_curso" | "terminada";
+
+/**
+ * Fase de la competencia en un momento dado. Sin fechas, siempre está en curso.
+ * La base decide con su propio reloj; esto sirve para avisar en pantalla.
+ */
+export function competitionPhase(
+  start: string | null | undefined,
+  end: string | null | undefined,
+  now: number = Date.now(),
+): CompetitionPhase {
+  if (start && now < new Date(start).getTime()) return "antes";
+  if (end && now >= new Date(end).getTime()) return "terminada";
+  return "en_curso";
+}
+
+/** Zona horaria con la que se cargan y se muestran las fechas de la competencia. */
+export const COMPETITION_TIMEZONE = "America/Argentina/Buenos_Aires";
+/** Argentina no tiene horario de verano: el desfase es fijo. */
+export const COMPETITION_UTC_OFFSET = "-03:00";
+
+/**
+ * De una fecha guardada (UTC) al valor de un campo `datetime-local`
+ * ("2026-11-21T14:30") en hora de Argentina.
+ */
+export function toCompetitionInput(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const parts = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: COMPETITION_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(iso));
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "00";
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
+}
+
+/**
+ * Del valor de un `datetime-local` ("2026-11-21T14:30", hora de Argentina) a
+ * una fecha ISO. Devuelve null si está vacío y undefined si no es válido.
+ */
+export function fromCompetitionInput(value: string): string | null | undefined {
+  const v = value.trim();
+  if (!v) return null;
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v)) return undefined;
+  const d = new Date(`${v}:00${COMPETITION_UTC_OFFSET}`);
+  return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
+}
+
+/** Fecha y hora legible en hora de Argentina, por ejemplo «viernes 21/11, 14:30». */
+export function formatCompetitionDate(iso: string): string {
+  return new Intl.DateTimeFormat("es-AR", {
+    timeZone: COMPETITION_TIMEZONE,
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(iso));
 }
 
 export interface MyState {
@@ -99,6 +169,14 @@ export interface MyState {
   tour_done: boolean;
   answers: Record<string, string>;
   answers_locked: boolean;
+  /** Pausa manual de los encuentros (Configuración → Encuentros abiertos). */
+  game_open: boolean;
+  questions_per_encounter: number;
+  competition_start: string | null;
+  competition_end: string | null;
+  competition_phase: CompetitionPhase;
+  /** Hora del servidor: sirve para calcular el desfase con el reloj del teléfono. */
+  now: string;
 }
 
 export interface Question {
@@ -115,14 +193,21 @@ export interface EncounterOtherPlayer {
   photo_path: string | null;
 }
 
-export interface EncounterTurnView {
+/** La pregunta que toca responder ahora (sin la respuesta correcta). */
+export interface EncounterCurrentTurn {
+  question: string;
+  options: string[];
+  /** Número de la pregunta dentro de las mías, desde 1. */
+  number: number;
+}
+
+/** Resultado de una de mis preguntas; sólo viene con el encuentro completo (R57). */
+export interface EncounterTurnResult {
   question: string;
   options: string[];
   chosen_index: number | null;
-  /** Sólo viene cuando el encuentro está completo (R57). */
-  is_correct: boolean | null;
-  /** Sólo viene cuando el encuentro está completo. */
-  correct_index: number | null;
+  correct_index: number;
+  is_correct: boolean;
 }
 
 /** Lo que el servidor le muestra a cada jugador de su encuentro. */
@@ -133,10 +218,18 @@ export interface EncounterView {
   expires_at: string;
   now: string;
   other: EncounterOtherPlayer;
-  /** La pregunta que me toca responder; null si todavía no es mi turno. */
-  my_turn: EncounterTurnView | null;
-  /** Resultado del otro; sólo cuando el encuentro está completo. */
-  other_correct: boolean | null;
+  /** Cuántas preguntas me tocan en total y cuántas ya respondí (R93). */
+  total: number;
+  answered: number;
+  /** Lo mismo para la otra persona. */
+  other_total: number;
+  other_answered: number;
+  /** La pregunta que me toca ahora; null si todavía no es mi turno o ya terminé las mías. */
+  my_turn: EncounterCurrentTurn | null;
+  /** Todas mis preguntas con su resultado; sólo cuando el encuentro está completo. */
+  results: EncounterTurnResult[] | null;
+  /** Cuántas acertó la otra persona; sólo cuando el encuentro está completo. */
+  other_correct: number | null;
 }
 
 /** Traduce los códigos de error de las funciones de la base a texto. */
@@ -145,7 +238,9 @@ export function gameErrorMessage(raw: string | undefined | null): string {
   const map: Record<string, string> = {
     no_autenticado: "Tenés que ingresar de nuevo.",
     cuenta_suspendida: "Tu cuenta está suspendida. Hablá con la organización.",
-    juego_cerrado: "El juego no está abierto en este momento.",
+    juego_cerrado: "Los encuentros están en pausa en este momento.",
+    competencia_no_empezo: "La competencia todavía no empezó.",
+    competencia_terminada: "La competencia terminó: ya no se pueden escanear más QR.",
     faltan_respuestas: "Primero elegí y respondé tus preguntas.",
     faltan_fijas: "Las preguntas obligatorias tienen que tener respuesta.",
     pocas_respuestas: "Te faltan preguntas: tenés que responder la cantidad exacta que se pide.",

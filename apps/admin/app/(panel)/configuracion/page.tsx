@@ -1,5 +1,6 @@
+import { competitionPhase, formatCompetitionDate, toCompetitionInput } from "@juego/shared";
 import { requireAdmin } from "@/lib/supabase-server";
-import { addAdminEmail, removeAdminEmail, updateSettings } from "../actions";
+import { addAdminEmail, removeAdminEmail, updateCompetition, updateSettings } from "../actions";
 import { Card, Flash, PageTitle, buttonClass, inputClass, secondaryButtonClass } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -12,14 +13,77 @@ export default async function ConfiguracionPage({
   const { db } = await requireAdmin();
   const { ok, error } = await searchParams;
   const [{ data: s }, { data: admins }] = await Promise.all([
-    db.from("settings").select("email_domain, encounter_minutes, game_open, min_answers").eq("id", 1).single(),
+    db
+      .from("settings")
+      .select(
+        "email_domain, encounter_minutes, game_open, min_answers, questions_per_encounter, competition_start, competition_end",
+      )
+      .eq("id", 1)
+      .single(),
     db.from("admin_emails").select("email").order("email"),
   ]);
+
+  const phase = competitionPhase(s?.competition_start, s?.competition_end);
+  const phaseText =
+    phase === "antes"
+      ? "Todavía no empezó"
+      : phase === "terminada"
+        ? "Ya terminó"
+        : s?.competition_start || s?.competition_end
+          ? "En curso"
+          : "Abierta (sin fechas)";
 
   return (
     <>
       <PageTitle title="Configuración" />
       <Flash ok={ok} error={error} />
+
+      <Card className="mb-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="font-bold">Competencia</h2>
+          <span
+            className={`rounded-full px-3 py-0.5 text-xs font-semibold ${
+              phase === "en_curso" ? "bg-ok-soft text-ok" : "bg-brand-soft text-brand"
+            }`}
+          >
+            {phaseText}
+          </span>
+        </div>
+        <p className="mt-1 text-sm text-muted">
+          <strong className="text-ink">Crear la cuenta es libre</strong> en cualquier momento. Estas fechas definen cuándo
+          se puede <strong className="text-ink">escanear QR</strong>: antes de empezar y después de terminar no se puede
+          empezar ningún encuentro nuevo. Los encuentros ya empezados se pueden terminar. Hora de Argentina. Vacío = sin
+          límite (R94).
+        </p>
+        <form action={updateCompetition} className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end">
+          <label className="flex flex-1 flex-col gap-1.5">
+            <span className="text-sm font-medium">Empieza</span>
+            <input
+              type="datetime-local"
+              name="competition_start"
+              defaultValue={toCompetitionInput(s?.competition_start)}
+              className={inputClass}
+            />
+          </label>
+          <label className="flex flex-1 flex-col gap-1.5">
+            <span className="text-sm font-medium">Termina</span>
+            <input
+              type="datetime-local"
+              name="competition_end"
+              defaultValue={toCompetitionInput(s?.competition_end)}
+              className={inputClass}
+            />
+          </label>
+          <button className={buttonClass}>Guardar fechas</button>
+        </form>
+        {(s?.competition_start || s?.competition_end) && (
+          <p className="mt-3 text-xs text-muted">
+            Guardado: {s?.competition_start ? `empieza el ${formatCompetitionDate(s.competition_start)}` : "sin inicio"}
+            {" · "}
+            {s?.competition_end ? `termina el ${formatCompetitionDate(s.competition_end)}` : "sin fin"}.
+          </p>
+        )}
+      </Card>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>
@@ -28,9 +92,10 @@ export default async function ConfiguracionPage({
             <label className="flex items-center gap-3">
               <input type="checkbox" name="game_open" defaultChecked={s?.game_open ?? true} className="size-5" />
               <span>
-                <span className="font-medium">Encuentros abiertos</span>
+                <span className="font-medium">Encuentros abiertos (pausa manual)</span>
                 <span className="block text-sm text-muted">
-                  Si está apagado, nadie puede empezar un encuentro (bloque horario, S9).
+                  Si lo apagás, nadie puede empezar un encuentro hasta que lo vuelvas a prender, aunque la competencia
+                  esté en curso.
                 </span>
               </span>
             </label>
@@ -45,7 +110,26 @@ export default async function ConfiguracionPage({
                 defaultValue={s?.encounter_minutes ?? 5}
                 className={`${inputClass} w-32`}
               />
-              <span className="text-xs text-muted">Se aplica a los encuentros nuevos (R65).</span>
+              <span className="text-xs text-muted">
+                Se aplica a los encuentros nuevos (R65). Es el tiempo para que los dos respondan todas sus preguntas:
+                con varias preguntas por encuentro conviene más de 5 minutos.
+              </span>
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium">Preguntas por encuentro</span>
+              <input
+                type="number"
+                name="questions_per_encounter"
+                min={1}
+                max={30}
+                required
+                defaultValue={s?.questions_per_encounter ?? 4}
+                className={`${inputClass} w-32`}
+              />
+              <span className="text-xs text-muted">
+                Cuántas preguntas responde cada uno sobre el otro dentro de un encuentro, una tras otra (R93). Cada
+                acierto suma 1 punto. No puede superar la cantidad de preguntas que responde cada jugador.
+              </span>
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="text-sm font-medium">Cantidad de preguntas que responde cada jugador</span>

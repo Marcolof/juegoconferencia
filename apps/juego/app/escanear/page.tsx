@@ -4,19 +4,23 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
 import { tokenFromQr, usePlayer } from "@/lib/player";
+import { useCompetition } from "@/lib/competition";
+import { CompetitionNotice } from "@/components/CompetitionNotice";
 import { Button, Notice, PlayerGate, Screen } from "@/components/ui";
 
 type CameraState = "starting" | "on" | "denied" | "unavailable";
 
 export default function EscanearPage() {
   const router = useRouter();
-  const { status } = usePlayer("ready");
+  const { state, status } = usePlayer("ready");
+  const comp = useCompetition(state);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [camera, setCamera] = useState<CameraState>("starting");
   const [manual, setManual] = useState("");
 
   useEffect(() => {
-    if (status !== "ok") return;
+    // Fuera de la competencia no se abre la cámara (R94).
+    if (status !== "ok" || !comp.canScan) return;
     let stream: MediaStream | null = null;
     let raf = 0;
     let done = false;
@@ -80,9 +84,18 @@ export default function EscanearPage() {
       cancelAnimationFrame(raf);
       stream?.getTracks().forEach((t) => t.stop());
     };
-  }, [status, router]);
+  }, [status, router, comp.canScan]);
 
   if (status !== "ok") return <PlayerGate status={status} />;
+
+  // Antes de empezar, después de terminar o en pausa: no se escanea (R94).
+  if (!comp.canScan) {
+    return (
+      <Screen title="Escanear QR" back="/">
+        <CompetitionNotice phase={comp.phase} paused={comp.paused} start={comp.start} end={comp.end} />
+      </Screen>
+    );
+  }
 
   return (
     <Screen title="Escanear QR" back="/">

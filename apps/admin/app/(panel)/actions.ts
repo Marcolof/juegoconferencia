@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { MIN_PASSWORD_LENGTH, PHOTOS_BUCKET } from "@juego/shared";
+import { MIN_PASSWORD_LENGTH, PHOTOS_BUCKET, fromCompetitionInput } from "@juego/shared";
 import { requireAdmin } from "@/lib/supabase-server";
 
 const BAN_FOREVER = "876000h"; // unos 100 años: la cuenta suspendida no puede ingresar
@@ -138,18 +138,56 @@ export async function setAnswerHidden(playerId: string, questionId: number, hidd
 
 // ---------- Configuración (S9, S10, P1) ----------
 
+/**
+ * Cuándo empieza y cuándo termina la competencia (F39, R94). Crear la cuenta
+ * es libre siempre; escanear QR sólo se puede dentro de estas fechas. Las
+ * fechas se cargan en hora de Argentina. Vacío = sin límite.
+ */
+export async function updateCompetition(form: FormData) {
+  const { db } = await requireAdmin();
+  const path = "/configuracion";
+  const start = fromCompetitionInput(text(form, "competition_start"));
+  const end = fromCompetitionInput(text(form, "competition_end"));
+  if (start === undefined || end === undefined) {
+    back(path, "error", "Alguna fecha no es válida. Usá el selector de fecha y hora.");
+  }
+  if (start && end && new Date(end) <= new Date(start)) {
+    back(path, "error", "La competencia tiene que terminar después de empezar.");
+  }
+  const { error } = await db
+    .from("settings")
+    .update({ competition_start: start, competition_end: end, updated_at: new Date().toISOString() })
+    .eq("id", 1);
+  if (error) back(path, "error", "No se pudieron guardar las fechas de la competencia.");
+  back(
+    path,
+    "ok",
+    start || end
+      ? "Fechas de la competencia guardadas."
+      : "Sin fechas: la competencia queda abierta todo el tiempo.",
+  );
+}
+
 export async function updateSettings(form: FormData) {
   const { db } = await requireAdmin();
   const path = "/configuracion";
   const domain = text(form, "email_domain").replace(/^@/, "").toLowerCase();
   const minutes = Number(text(form, "encounter_minutes"));
   const minAnswers = Number(text(form, "min_answers"));
+  const perEncounter = Number(text(form, "questions_per_encounter"));
   const gameOpen = form.get("game_open") === "on";
   if (!Number.isInteger(minutes) || minutes < 1 || minutes > 60) {
     back(path, "error", "La duración tiene que ser un número entero entre 1 y 60.");
   }
   if (!Number.isInteger(minAnswers) || minAnswers < 1 || minAnswers > 30) {
-    back(path, "error", "El mínimo de preguntas tiene que ser un número entero entre 1 y 30.");
+    back(path, "error", "La cantidad de preguntas tiene que ser un número entero entre 1 y 30.");
+  }
+  if (!Number.isInteger(perEncounter) || perEncounter < 1 || perEncounter > minAnswers) {
+    back(
+      path,
+      "error",
+      `Las preguntas por encuentro tienen que ser un número entero entre 1 y ${minAnswers} (lo que responde cada jugador).`,
+    );
   }
   if (domain && !/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) {
     back(path, "error", "El dominio no parece válido (ejemplo: empresa.com).");
@@ -160,6 +198,7 @@ export async function updateSettings(form: FormData) {
       email_domain: domain || null,
       encounter_minutes: minutes,
       min_answers: minAnswers,
+      questions_per_encounter: perEncounter,
       game_open: gameOpen,
       updated_at: new Date().toISOString(),
     })

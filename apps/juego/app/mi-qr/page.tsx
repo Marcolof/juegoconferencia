@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { usePlayer } from "@/lib/player";
 import { useActiveEncounterRedirect } from "@/lib/encounters";
+import { useCompetition } from "@/lib/competition";
+import { CompetitionNotice } from "@/components/CompetitionNotice";
 import { PlayerGate, Screen } from "@/components/ui";
 
 export default function MiQrPage() {
   const { state, status, supabase } = usePlayer("ready");
+  const comp = useCompetition(state);
   const [qr, setQr] = useState<string | null>(null);
   useActiveEncounterRedirect(status === "ok" ? supabase : null, state?.id);
 
@@ -30,6 +33,15 @@ export default function MiQrPage() {
   }, []);
 
   if (status !== "ok" || !state) return <PlayerGate status={status} />;
+
+  // Antes de empezar, después de terminar o en pausa: nadie puede escanear el QR (R94).
+  if (!comp.canScan) {
+    return (
+      <Screen title="Mi QR" back="/">
+        <CompetitionNotice phase={comp.phase} paused={comp.paused} start={comp.start} end={comp.end} />
+      </Screen>
+    );
+  }
 
   return (
     <Screen title="Mi QR" back="/">

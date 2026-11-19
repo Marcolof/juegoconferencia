@@ -98,7 +98,7 @@ export default function EncuentroPage() {
   const other = view.other;
   const otherName = `${other.first_name} ${other.last_name}`;
   const turn = view.my_turn;
-  const myTurnNow = !!turn && turn.chosen_index === null && !final;
+  const myTurnNow = !!turn && !final;
 
   async function confirm() {
     if (!supabase || choice === null) return;
@@ -111,6 +111,7 @@ export default function EncuentroPage() {
       void load();
       return;
     }
+    setChoice(null); // la pregunta siguiente arranca sin nada elegido
     setView(data as EncounterView);
   }
 
@@ -153,44 +154,54 @@ export default function EncuentroPage() {
     );
   }
 
-  // ---------- Resultado (R57, R59, R61) ----------
-  if (view.status === "completo" && turn) {
-    const mine = turn.is_correct ? 1 : 0;
+  // ---------- Resultado (R57, R59, R61, R93) ----------
+  if (view.status === "completo" && view.results) {
+    const results = view.results;
+    const mine = results.filter((r) => r.is_correct).length;
+    const theirs = view.other_correct ?? 0;
     return (
       <Screen title="Resultado">
         {header}
         <div className="grid grid-cols-2 gap-3">
-          <ResultCard label="Vos" ok={!!turn.is_correct} yes="Acertaste" no="No acertaste" />
-          <ResultCard label={other.first_name} ok={!!view.other_correct} yes="Acertó" no="No acertó" />
+          <ResultCard label="Vos" correct={mine} total={results.length} />
+          <ResultCard label={other.first_name} correct={theirs} total={view.other_total} />
         </div>
-        <section className="mt-5 rounded-3xl bg-surface p-4 shadow-sm">
-          <p className="text-sm text-muted">Tu pregunta sobre {other.first_name}</p>
-          <p className="mt-1 font-semibold">{turn.question}</p>
-          <ul className="mt-3 flex flex-col gap-2">
-            {turn.options.map((opt, i) => (
-              <li
-                key={i}
-                className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${
-                  i === turn.correct_index
-                    ? "bg-ok-soft font-semibold text-ok"
-                    : i === turn.chosen_index
-                      ? "bg-bad-soft text-bad"
-                      : "bg-canvas"
-                }`}
-              >
-                <span className="flex-1">
-                  {opt}
-                  {i === turn.chosen_index && i !== turn.correct_index && " (tu elección)"}
-                </span>
-                {i === turn.correct_index && <Check size={18} strokeWidth={3} aria-label="Correcta" />}
-                {i === turn.chosen_index && i !== turn.correct_index && <X size={18} strokeWidth={3} aria-hidden />}
-              </li>
-            ))}
-          </ul>
-        </section>
         <p className="mt-5 text-center text-lg font-bold">
-          {mine ? "¡Sumaste 1 punto!" : "Esta vez no sumaste."}
+          {mine > 0 ? `¡Sumaste ${mine} ${mine === 1 ? "punto" : "puntos"}!` : "Esta vez no sumaste."}
         </p>
+
+        <h2 className="mb-2 mt-6 text-sm font-semibold text-muted">Tus preguntas sobre {other.first_name}</h2>
+        <div className="flex flex-col gap-3">
+          {results.map((r, n) => (
+            <section key={n} className="rounded-3xl bg-surface p-4 shadow-sm">
+              <p className="text-xs text-muted">
+                Pregunta {n + 1} de {results.length}
+              </p>
+              <p className="mt-1 font-semibold">{r.question}</p>
+              <ul className="mt-3 flex flex-col gap-2">
+                {r.options.map((opt, i) => (
+                  <li
+                    key={i}
+                    className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${
+                      i === r.correct_index
+                        ? "bg-ok-soft font-semibold text-ok"
+                        : i === r.chosen_index
+                          ? "bg-bad-soft text-bad"
+                          : "bg-canvas"
+                    }`}
+                  >
+                    <span className="flex-1">
+                      {opt}
+                      {i === r.chosen_index && i !== r.correct_index && " (tu elección)"}
+                    </span>
+                    {i === r.correct_index && <Check size={18} strokeWidth={3} aria-label="Correcta" />}
+                    {i === r.chosen_index && i !== r.correct_index && <X size={18} strokeWidth={3} aria-hidden />}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
         <LinkButton href="/" className="mt-5">
           Volver al inicio
         </LinkButton>
@@ -198,13 +209,33 @@ export default function EncuentroPage() {
     );
   }
 
-  // ---------- Mi turno (R55, R56) ----------
+  // ---------- Mi turno: las preguntas, una tras otra (R55, R56, R93) ----------
   if (myTurnNow && turn) {
     return (
       <Screen title="Tu turno">
         {header}
-        <p className="text-sm text-muted">Charlá con {other.first_name} y elegí su respuesta.</p>
-        <h2 className="mb-4 mt-2 text-xl font-bold">{turn.question}</h2>
+        <div className="mb-3">
+          <div className="mb-1.5 flex items-center justify-between text-sm">
+            <span className="font-semibold tabular-nums">
+              Pregunta {turn.number} de {view.total}
+            </span>
+            <span className="text-muted">Charlá con {other.first_name}</span>
+          </div>
+          <div
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={view.total}
+            aria-valuenow={view.answered}
+            aria-label="Avance de tus preguntas"
+            className="h-2 overflow-hidden rounded-full bg-brand-soft"
+          >
+            <div
+              className="h-full rounded-full bg-brand transition-all"
+              style={{ width: `${(view.answered / Math.max(1, view.total)) * 100}%` }}
+            />
+          </div>
+        </div>
+        <h2 className="mb-4 mt-4 text-xl font-bold">{turn.question}</h2>
         <div role="radiogroup" aria-label="Opciones" className="flex flex-col gap-3">
           {turn.options.map((opt, i) => (
             <button
@@ -226,17 +257,20 @@ export default function EncuentroPage() {
           </div>
         )}
         <Button className="mt-6" onClick={confirm} disabled={choice === null || busy}>
-          {busy ? "Enviando…" : "Confirmar respuesta"}
+          {busy ? "Enviando…" : turn.number >= view.total ? "Confirmar y terminar" : "Confirmar y seguir"}
         </Button>
       </Screen>
     );
   }
 
   // ---------- Esperando al otro ----------
-  const waitingText =
-    view.i_am === "b" && view.status === "turno_a"
-      ? `${other.first_name} está adivinando una de tus respuestas. ¡Charlen! Después te toca a vos.`
-      : `Ahora ${other.first_name} adivina una de tus respuestas. Los puntos aparecen cuando responda.`;
+  const theyAnswering =
+    (view.i_am === "a" && view.status === "turno_b") || (view.i_am === "b" && view.status === "turno_a");
+  const waitingText = theyAnswering
+    ? view.i_am === "b" && view.status === "turno_a"
+      ? `${other.first_name} está adivinando tus respuestas. ¡Charlen! Después te toca a vos.`
+      : `Ahora ${other.first_name} adivina tus respuestas. Los puntos aparecen cuando termine.`
+    : `Esperando a ${other.first_name}…`;
 
   return (
     <Screen title="Esperando">
@@ -244,18 +278,31 @@ export default function EncuentroPage() {
       <div className="flex flex-col items-center gap-4 py-10 text-center">
         <span className="size-10 animate-spin rounded-full border-4 border-brand-soft border-t-brand" />
         <p className="text-lg">{waitingText}</p>
+        {theyAnswering && view.other_total > 0 && (
+          <p className="rounded-full bg-brand-soft px-4 py-1.5 text-sm font-semibold tabular-nums text-brand">
+            {view.other_answered} de {view.other_total} respondidas
+          </p>
+        )}
       </div>
       {error && <Notice tone="error">{error}</Notice>}
     </Screen>
   );
 }
 
-function ResultCard({ label, ok, yes, no }: { label: string; ok: boolean; yes: string; no: string }) {
+function ResultCard({ label, correct, total }: { label: string; correct: number; total: number }) {
+  const all = total > 0 && correct === total;
+  const none = correct === 0;
   return (
-    <div className={`rounded-3xl p-4 text-center ${ok ? "bg-ok-soft text-ok" : "bg-bad-soft text-bad"}`}>
+    <div
+      className={`rounded-3xl p-4 text-center ${
+        none ? "bg-bad-soft text-bad" : all ? "bg-ok-soft text-ok" : "bg-brand-soft text-brand"
+      }`}
+    >
       <p className="text-sm font-medium">{label}</p>
-      <p className="mt-1 text-xl font-extrabold">{ok ? yes : no}</p>
-      <p className="text-sm">{ok ? "+1 punto" : "0 puntos"}</p>
+      <p className="mt-1 text-2xl font-extrabold tabular-nums">
+        {correct} de {total}
+      </p>
+      <p className="text-sm">{correct === 1 ? "1 acierto" : `${correct} aciertos`}</p>
     </div>
   );
 }
