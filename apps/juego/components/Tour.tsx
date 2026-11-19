@@ -1,0 +1,100 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui";
+
+/** Pasos del tour de bienvenida (F34, R83). */
+const STEPS = [
+  {
+    icon: "👋",
+    title: "Conocé gente nueva",
+    text: "El objetivo es charlar con personas de la convención y descubrir algo de cada una. Cada vez que adivinás una respuesta, sumás 1 punto.",
+  },
+  {
+    icon: "▣",
+    title: "Mostrá o escaneá un QR",
+    text: "Con «Escanear QR» leés el código de otra persona y empieza el encuentro. Con «Mostrar mi QR» dejás que te escaneen a vos. Cada pareja juega una sola vez.",
+  },
+  {
+    icon: "💬",
+    title: "Charlá y elegí",
+    text: "Vas a ver una pregunta sobre la otra persona con 3 opciones: una es la verdadera. Preguntale y elegí. Después le toca a ella con una pregunta sobre vos. Tienen 5 minutos.",
+  },
+  {
+    icon: "🏆",
+    title: "Mirá el ranking",
+    text: "Abajo ves el ranking con tu puesto. Tus respuestas las podés cambiar con «Editar mis respuestas» hasta tu primer encuentro.",
+  },
+] as const;
+
+/**
+ * Tour de bienvenida: se muestra la primera vez que el jugador llega a la
+ * pantalla principal (R84) y se puede volver a abrir con «¿Cómo se juega?».
+ */
+export function Tour({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [i, setI] = useState(0);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (open) setI(0);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    titleRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, i, onClose]);
+
+  if (!open) return null;
+  const step = STEPS[i];
+  const last = i === STEPS.length - 1;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tour-title"
+    >
+      <div className="w-full max-w-md rounded-3xl bg-surface p-6 shadow-xl">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted">
+            {i + 1} de {STEPS.length}
+          </span>
+          {!last && (
+            <button onClick={onClose} className="text-sm text-muted underline-offset-4 hover:underline">
+              Saltar
+            </button>
+          )}
+        </div>
+
+        <div aria-hidden className="mt-4 text-4xl">
+          {step.icon}
+        </div>
+        <h2 id="tour-title" ref={titleRef} tabIndex={-1} className="mt-3 text-xl font-bold outline-none">
+          {step.title}
+        </h2>
+        <p className="mt-2 text-base leading-relaxed text-muted">{step.text}</p>
+
+        <div className="mt-5 flex justify-center gap-1.5" aria-hidden>
+          {STEPS.map((_, n) => (
+            <span key={n} className={`h-1.5 rounded-full transition-all ${n === i ? "w-6 bg-brand" : "w-1.5 bg-line"}`} />
+          ))}
+        </div>
+
+        <div className="mt-6 flex gap-3">
+          {i > 0 && (
+            <Button variant="secondary" onClick={() => setI(i - 1)}>
+              Atrás
+            </Button>
+          )}
+          <Button onClick={() => (last ? onClose() : setI(i + 1))}>{last ? "¡A jugar!" : "Siguiente"}</Button>
+        </div>
+      </div>
+    </div>
+  );
+}

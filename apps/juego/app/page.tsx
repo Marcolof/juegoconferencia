@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { takePendingQr, usePlayer } from "@/lib/player";
 import { useActiveEncounterRedirect } from "@/lib/encounters";
 import { usePhotoUrls } from "@/lib/photos";
 import { Ranking } from "@/components/Ranking";
+import { Tour } from "@/components/Tour";
 import { Avatar, LinkButton, PlayerGate, Screen, signOutAndGo } from "@/components/ui";
 
 export default function PrincipalPage() {
@@ -14,6 +15,17 @@ export default function PrincipalPage() {
   const { state, status, supabase } = usePlayer("ready");
   const photo = usePhotoUrls([state?.photo_path]);
   useActiveEncounterRedirect(status === "ok" ? supabase : null, state?.id);
+  const [tourOpen, setTourOpen] = useState(false);
+
+  // La primera vez que llega a la pantalla principal se abre el tour (R84).
+  useEffect(() => {
+    if (status === "ok" && state && !state.tour_done) setTourOpen(true);
+  }, [status, state]);
+
+  const closeTour = useCallback(() => {
+    setTourOpen(false);
+    if (state && !state.tour_done && supabase) void supabase.rpc("mark_tour_done");
+  }, [state, supabase]);
 
   // Si entró escaneando un QR con la cámara del teléfono, se retoma ese QR.
   useEffect(() => {
@@ -57,11 +69,16 @@ export default function PrincipalPage() {
 
       <Ranking supabase={supabase} playerId={state.id} />
 
-      <p className="mt-6 text-center text-sm">
+      <p className="mt-6 flex justify-center gap-5 text-sm">
         <Link href="/respuestas" className="text-brand underline-offset-4 hover:underline">
           {state.answers_locked ? "Ver mis respuestas" : "Editar mis respuestas"}
         </Link>
+        <button onClick={() => setTourOpen(true)} className="text-brand underline-offset-4 hover:underline">
+          ¿Cómo se juega?
+        </button>
       </p>
+
+      <Tour open={tourOpen} onClose={closeTour} />
     </Screen>
   );
 }

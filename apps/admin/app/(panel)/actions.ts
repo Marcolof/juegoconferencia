@@ -121,9 +121,13 @@ export async function updateSettings(form: FormData) {
   const path = "/configuracion";
   const domain = text(form, "email_domain").replace(/^@/, "").toLowerCase();
   const minutes = Number(text(form, "encounter_minutes"));
+  const minAnswers = Number(text(form, "min_answers"));
   const gameOpen = form.get("game_open") === "on";
   if (!Number.isInteger(minutes) || minutes < 1 || minutes > 60) {
     back(path, "error", "La duración tiene que ser un número entero entre 1 y 60.");
+  }
+  if (!Number.isInteger(minAnswers) || minAnswers < 1 || minAnswers > 30) {
+    back(path, "error", "El mínimo de preguntas tiene que ser un número entero entre 1 y 30.");
   }
   if (domain && !/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) {
     back(path, "error", "El dominio no parece válido (ejemplo: empresa.com).");
@@ -133,6 +137,7 @@ export async function updateSettings(form: FormData) {
     .update({
       email_domain: domain || null,
       encounter_minutes: minutes,
+      min_answers: minAnswers,
       game_open: gameOpen,
       updated_at: new Date().toISOString(),
     })

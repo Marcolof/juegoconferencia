@@ -24,7 +24,7 @@ export default function FotoPage() {
 
   if (status !== "ok" || !state || !supabase) return <PlayerGate status={status} />;
 
-  const next = Object.keys(state.answers).length < state.total_questions ? "/respuestas" : "/";
+  const next = state.answers_ready ? "/" : "/respuestas";
   const currentUrl = state.photo_path ? current[state.photo_path] : null;
 
   async function onPick(e: React.ChangeEvent<HTMLInputElement>) {

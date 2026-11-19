@@ -12,7 +12,7 @@ export default async function ConfiguracionPage({
   const { db } = await requireAdmin();
   const { ok, error } = await searchParams;
   const [{ data: s }, { data: admins }] = await Promise.all([
-    db.from("settings").select("email_domain, encounter_minutes, game_open").eq("id", 1).single(),
+    db.from("settings").select("email_domain, encounter_minutes, game_open, min_answers").eq("id", 1).single(),
     db.from("admin_emails").select("email").order("email"),
   ]);
 
@@ -46,6 +46,21 @@ export default async function ConfiguracionPage({
                 className={`${inputClass} w-32`}
               />
               <span className="text-xs text-muted">Se aplica a los encuentros nuevos (R65).</span>
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium">Mínimo de preguntas que responde cada jugador</span>
+              <input
+                type="number"
+                name="min_answers"
+                min={1}
+                max={30}
+                required
+                defaultValue={s?.min_answers ?? 4}
+                className={`${inputClass} w-32`}
+              />
+              <span className="text-xs text-muted">
+                Cuenta las preguntas fijas, que son obligatorias. Se pide al guardar respuestas (R81).
+              </span>
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="text-sm font-medium">Dominio del email corporativo</span>

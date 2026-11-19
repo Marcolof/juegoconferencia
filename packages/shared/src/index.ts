@@ -64,6 +64,8 @@ export interface PublicSettings {
   email_domain: string | null;
   encounter_minutes: number;
   game_open: boolean;
+  /** Mínimo de preguntas que cada jugador responde (R81). */
+  min_answers: number;
 }
 
 export interface MyState {
@@ -77,6 +79,12 @@ export interface MyState {
   status: AccountStatus;
   qr_token: string | null;
   total_questions: number;
+  /** Mínimo de preguntas a responder, contando las fijas (R81). */
+  min_answers: number;
+  /** Respondió las fijas y llegó al mínimo: ya puede jugar (R81). */
+  answers_ready: boolean;
+  /** Ya vio el tour de bienvenida (R84). */
+  tour_done: boolean;
   answers: Record<string, string>;
   answers_locked: boolean;
 }
@@ -126,7 +134,9 @@ export function gameErrorMessage(raw: string | undefined | null): string {
     no_autenticado: "Tenés que ingresar de nuevo.",
     cuenta_suspendida: "Tu cuenta está suspendida. Hablá con la organización.",
     juego_cerrado: "El juego no está abierto en este momento.",
-    faltan_respuestas: "Primero completá tus 4 respuestas.",
+    faltan_respuestas: "Primero elegí y respondé tus preguntas.",
+    faltan_fijas: "Las preguntas obligatorias tienen que tener respuesta.",
+    pocas_respuestas: "Te faltan preguntas: elegí algunas más.",
     otro_faltan_respuestas: "Esa persona todavía no completó sus respuestas.",
     qr_invalido: "Ese QR no es de este juego.",
     mismo_jugador: "Ese es tu propio QR.",

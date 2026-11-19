@@ -12,7 +12,7 @@ const PENDING_QR_KEY = "juego:qr-pendiente";
 /**
  * Carga el estado del jugador y lo manda a la pantalla que corresponde.
  * - "auth": alcanza con tener sesión (pantallas de foto y respuestas).
- * - "ready": además tiene que haber completado la foto y las 4 respuestas.
+ * - "ready": además tiene que haber completado la foto y sus respuestas (R81).
  */
 export function usePlayer(gate: "auth" | "ready") {
   const router = useRouter();
@@ -56,7 +56,7 @@ export function usePlayer(gate: "auth" | "ready") {
         router.replace("/foto");
         return s;
       }
-      if (Object.keys(s.answers).length < s.total_questions) {
+      if (!s.answers_ready) {
         router.replace("/respuestas");
         return s;
       }
