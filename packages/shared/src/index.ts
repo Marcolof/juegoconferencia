@@ -88,15 +88,17 @@ export interface PublicSettings {
 export type CompetitionPhase = "antes" | "en_curso" | "terminada";
 
 /**
- * Fase de la competencia en un momento dado. Sin fechas, siempre está en curso.
- * La base decide con su propio reloj; esto sirve para avisar en pantalla.
+ * Fase de la competencia en un momento dado (R94, R96).
+ * Sin fecha de inicio el juego todavía no se lanzó: «antes». Sin fecha de fin
+ * no termina nunca. La base decide con su propio reloj; esto sirve para avisar
+ * en pantalla.
  */
 export function competitionPhase(
   start: string | null | undefined,
   end: string | null | undefined,
   now: number = Date.now(),
 ): CompetitionPhase {
-  if (start && now < new Date(start).getTime()) return "antes";
+  if (!start || now < new Date(start).getTime()) return "antes";
   if (end && now >= new Date(end).getTime()) return "terminada";
   return "en_curso";
 }

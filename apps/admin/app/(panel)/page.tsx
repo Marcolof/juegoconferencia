@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { competitionPhase, formatCompetitionDate } from "@juego/shared";
 import { requireAdmin } from "@/lib/supabase-server";
 import { Card, PageTitle } from "@/components/ui";
 
@@ -23,7 +24,11 @@ export default async function ResumenPage() {
     count("encounters", (q) => q.eq("status", "completo")),
     count("encounters", (q) => q.in("status", ["turno_a", "turno_b"])),
     count("encounters", (q) => q.eq("status", "vencido")),
-    db.from("settings").select("game_open, encounter_minutes, email_domain").eq("id", 1).single(),
+    db
+      .from("settings")
+      .select("game_open, encounter_minutes, email_domain, competition_start, competition_end")
+      .eq("id", 1)
+      .single(),
   ]);
 
   const stats = [
@@ -63,7 +68,21 @@ export default async function ResumenPage() {
           <h2 className="font-bold">Estado del juego</h2>
           <ul className="mt-3 space-y-1 text-sm">
             <li>
-              Encuentros: <strong>{s.game_open ? "abiertos" : "cerrados"}</strong>
+              Juego:{" "}
+              <strong>
+                {(() => {
+                  const phase = competitionPhase(s.competition_start, s.competition_end);
+                  if (phase === "antes") return s.competition_start ? "todavía no empezó" : "sin lanzar";
+                  if (phase === "terminada") return "terminado";
+                  return s.game_open ? "en curso" : "en curso, en pausa";
+                })()}
+              </strong>
+            </li>
+            <li>
+              Empieza:{" "}
+              <strong>{s.competition_start ? formatCompetitionDate(s.competition_start) : "sin fecha"}</strong>
+              {" · "}Termina:{" "}
+              <strong>{s.competition_end ? formatCompetitionDate(s.competition_end) : "sin fecha"}</strong>
             </li>
             <li>
               Duración de cada encuentro: <strong>{s.encounter_minutes} min</strong>

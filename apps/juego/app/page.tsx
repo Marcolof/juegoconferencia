@@ -37,11 +37,11 @@ const chip =
 
 export default function PrincipalPage() {
   const router = useRouter();
-  const { state, status, supabase } = usePlayer("ready");
+  const { state, status, supabase, reload } = usePlayer("ready");
   const photo = usePhotoUrls([state?.photo_path]);
   useActiveEncounterRedirect(status === "ok" ? supabase : null, state?.id);
   const [tourOpen, setTourOpen] = useState(false);
-  const comp = useCompetition(state);
+  const comp = useCompetition(state, reload);
 
   // El tour se abre sólo la primera vez que la cuenta llega a la principal (R84).
   useEffect(() => {

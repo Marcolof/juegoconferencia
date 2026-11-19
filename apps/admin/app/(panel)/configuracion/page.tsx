@@ -1,6 +1,13 @@
 import { competitionPhase, formatCompetitionDate, toCompetitionInput } from "@juego/shared";
 import { requireAdmin } from "@/lib/supabase-server";
-import { addAdminEmail, removeAdminEmail, updateCompetition, updateSettings } from "../actions";
+import {
+  addAdminEmail,
+  endCompetitionNow,
+  removeAdminEmail,
+  startCompetitionNow,
+  updateCompetition,
+  updateSettings,
+} from "../actions";
 import { Card, Flash, PageTitle, buttonClass, inputClass, secondaryButtonClass } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -26,12 +33,12 @@ export default async function ConfiguracionPage({
   const phase = competitionPhase(s?.competition_start, s?.competition_end);
   const phaseText =
     phase === "antes"
-      ? "Todavía no empezó"
+      ? s?.competition_start
+        ? "Todavía no empezó"
+        : "Sin lanzar"
       : phase === "terminada"
         ? "Ya terminó"
-        : s?.competition_start || s?.competition_end
-          ? "En curso"
-          : "Abierta (sin fechas)";
+        : "En curso";
 
   return (
     <>
@@ -51,10 +58,24 @@ export default async function ConfiguracionPage({
         </div>
         <p className="mt-1 text-sm text-muted">
           <strong className="text-ink">Crear la cuenta es libre</strong> en cualquier momento. Estas fechas definen cuándo
-          se puede <strong className="text-ink">escanear QR</strong>: antes de empezar y después de terminar no se puede
-          empezar ningún encuentro nuevo. Los encuentros ya empezados se pueden terminar. Hora de Argentina. Vacío = sin
-          límite (R94).
+          se puede <strong className="text-ink">escanear QR</strong>. Mientras el juego <strong className="text-ink">no
+          esté lanzado</strong> (sin fecha de inicio, o antes de esa fecha) los jugadores ven «El juego va a comenzar» y no
+          pueden escanear; cuando empieza, ven las opciones para jugar. Después de terminar tampoco se puede empezar
+          ningún encuentro nuevo, pero los ya empezados se pueden terminar. Hora de Argentina. Sin fecha de fin = no
+          termina nunca (R94, R96).
         </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          {phase === "antes" && (
+            <form action={startCompetitionNow}>
+              <button className={buttonClass}>Iniciar el juego ahora</button>
+            </form>
+          )}
+          {phase === "en_curso" && (
+            <form action={endCompetitionNow}>
+              <button className={secondaryButtonClass}>Terminar el juego ahora</button>
+            </form>
+          )}
+        </div>
         <form action={updateCompetition} className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end">
           <label className="flex flex-1 flex-col gap-1.5">
             <span className="text-sm font-medium">Empieza</span>

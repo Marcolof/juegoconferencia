@@ -9,8 +9,8 @@ import { CompetitionNotice } from "@/components/CompetitionNotice";
 import { PlayerGate, Screen } from "@/components/ui";
 
 export default function MiQrPage() {
-  const { state, status, supabase } = usePlayer("ready");
-  const comp = useCompetition(state);
+  const { state, status, supabase, reload } = usePlayer("ready");
+  const comp = useCompetition(state, reload);
   const [qr, setQr] = useState<string | null>(null);
   useActiveEncounterRedirect(status === "ok" ? supabase : null, state?.id);
 

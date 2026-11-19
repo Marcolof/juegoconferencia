@@ -12,8 +12,8 @@ type CameraState = "starting" | "on" | "denied" | "unavailable";
 
 export default function EscanearPage() {
   const router = useRouter();
-  const { state, status } = usePlayer("ready");
-  const comp = useCompetition(state);
+  const { state, status, reload } = usePlayer("ready");
+  const comp = useCompetition(state, reload);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [camera, setCamera] = useState<CameraState>("starting");
   const [manual, setManual] = useState("");

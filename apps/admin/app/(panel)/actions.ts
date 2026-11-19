@@ -143,6 +143,38 @@ export async function setAnswerHidden(playerId: string, questionId: number, hidd
  * es libre siempre; escanear QR sólo se puede dentro de estas fechas. Las
  * fechas se cargan en hora de Argentina. Vacío = sin límite.
  */
+/** Lanza el juego ya: pone la fecha de inicio en este momento (F40, R96). */
+export async function startCompetitionNow() {
+  const { db } = await requireAdmin();
+  const path = "/configuracion";
+  const { data } = await db.from("settings").select("competition_end").eq("id", 1).single();
+  if (data?.competition_end && new Date(data.competition_end) <= new Date()) {
+    back(path, "error", "La fecha de fin ya pasó. Cambiala o borrala antes de iniciar el juego.");
+  }
+  const { error } = await db
+    .from("settings")
+    .update({ competition_start: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq("id", 1);
+  if (error) back(path, "error", "No se pudo iniciar el juego.");
+  back(path, "ok", "¡El juego empezó! Los jugadores ya pueden escanear QR.");
+}
+
+/** Termina el juego ya: pone la fecha de fin en este momento. */
+export async function endCompetitionNow() {
+  const { db } = await requireAdmin();
+  const path = "/configuracion";
+  const { data } = await db.from("settings").select("competition_start").eq("id", 1).single();
+  if (!data?.competition_start || new Date(data.competition_start) > new Date()) {
+    back(path, "error", "El juego todavía no empezó: no hay nada que terminar.");
+  }
+  const { error } = await db
+    .from("settings")
+    .update({ competition_end: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq("id", 1);
+  if (error) back(path, "error", "No se pudo terminar el juego.");
+  back(path, "ok", "El juego terminó: ya no se pueden escanear QR nuevos.");
+}
+
 export async function updateCompetition(form: FormData) {
   const { db } = await requireAdmin();
   const path = "/configuracion";
@@ -162,9 +194,9 @@ export async function updateCompetition(form: FormData) {
   back(
     path,
     "ok",
-    start || end
-      ? "Fechas de la competencia guardadas."
-      : "Sin fechas: la competencia queda abierta todo el tiempo.",
+    !start
+      ? "Fechas guardadas. Sin fecha de inicio el juego queda sin lanzar: los jugadores ven que va a comenzar."
+      : "Fechas de la competencia guardadas.",
   );
 }
 
