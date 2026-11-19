@@ -48,7 +48,7 @@ export default async function ConfiguracionPage({
               <span className="text-xs text-muted">Se aplica a los encuentros nuevos (R65).</span>
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium">Mínimo de preguntas que responde cada jugador</span>
+              <span className="text-sm font-medium">Cantidad de preguntas que responde cada jugador</span>
               <input
                 type="number"
                 name="min_answers"
@@ -59,8 +59,9 @@ export default async function ConfiguracionPage({
                 className={`${inputClass} w-32`}
               />
               <span className="text-xs text-muted">
-                Cada jugador elige libremente qué preguntas responde; este es el mínimo. Se pide al guardar respuestas
-                (R81, R90).
+                Cada jugador elige libremente cuáles, pero tiene que responder exactamente esta cantidad: ni más ni
+                menos (R92). Si la cambiás, quienes ya respondieron con otra cantidad tendrán que editar sus
+                preguntas.
               </span>
             </label>
             <label className="flex flex-col gap-1.5">

@@ -57,8 +57,9 @@ export default function RespuestasPage() {
   if (status !== "ok" || !state || !supabase) return <PlayerGate status={status} />;
 
   const locked = state.answers_locked;
-  const min = state.min_answers;
-  const enoughChosen = chosen.length >= min;
+  // Cantidad exacta de preguntas que se responden (F38, R92): ni más ni menos.
+  const total = state.min_answers;
+  const exactChosen = chosen.length === total;
   const allAnswered = chosen.every((q) => (values[String(q.id)] ?? "").trim().length > 0);
   const canGoHome = state.answers_ready;
 
@@ -67,7 +68,7 @@ export default function RespuestasPage() {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(q.id)) next.delete(q.id);
-      else next.add(q.id);
+      else if (next.size < total) next.add(q.id); // al llegar al tope no se suman más
       return next;
     });
   }
@@ -146,34 +147,34 @@ export default function RespuestasPage() {
   if (step === "elegir") {
     return (
       <Screen title="Elegí tus preguntas" back={canGoHome ? "/" : undefined}>
+        <p className="sticky top-0 z-10 -mx-4 mb-3 bg-canvas/95 px-4 py-2 text-center text-lg font-bold tabular-nums backdrop-blur" aria-hidden>
+          <span className={exactChosen ? "text-ok" : "text-brand"}>{chosen.length}</span>
+          <span className="text-muted"> de {total}</span>
+        </p>
         <p className="text-muted">
-          Marcá las preguntas que querés responder: otros jugadores van a tener que adivinar tus respuestas charlando con
-          vos. Elegí al menos {min}.
-          {questions?.some((q) => q.is_fixed) && (
-            <>
-              {" "}
-              Las que dicen <strong>obligatoria</strong> ya vienen marcadas.
-            </>
-          )}
+          Elegí <strong className="text-ink">exactamente {total} preguntas</strong> para responder: otros jugadores van a
+          tener que adivinar tus respuestas charlando con vos.
         </p>
 
         {!questions ? (
           <Spinner />
         ) : (
-          <ul className="mt-5 flex flex-col gap-2 pb-28">
+          <ul className="mt-5 flex flex-col gap-2 pb-32">
             {questions.map((q) => {
               const on = selected.has(q.id);
+              // Con el cupo completo, las que no están marcadas quedan bloqueadas.
+              const blocked = !on && chosen.length >= total;
               return (
                 <li key={q.id}>
                   <button
                     type="button"
                     role="checkbox"
                     aria-checked={on}
-                    aria-disabled={q.is_fixed}
+                    aria-disabled={q.is_fixed || blocked}
                     onClick={() => toggle(q)}
                     className={`flex min-h-14 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition ${
                       on ? "bg-brand-soft ring-2 ring-brand" : "bg-surface ring-1 ring-line"
-                    } ${q.is_fixed ? "cursor-default" : "active:scale-[0.99]"}`}
+                    } ${q.is_fixed ? "cursor-default" : blocked ? "cursor-not-allowed opacity-45" : "active:scale-[0.99]"}`}
                   >
                     <span
                       aria-hidden
@@ -195,12 +196,15 @@ export default function RespuestasPage() {
         {error && <Notice tone="error">{error}</Notice>}
 
         <BottomBar>
-          <p className="mb-2 text-center text-sm text-muted" aria-live="polite">
-            {enoughChosen
-              ? `${chosen.length} preguntas elegidas`
-              : `Elegiste ${chosen.length} de ${min} como mínimo`}
+          <p
+            className={`mb-2 text-center text-sm font-semibold tabular-nums ${exactChosen ? "text-ok" : "text-muted"}`}
+            aria-live="polite"
+          >
+            {exactChosen
+              ? `${chosen.length} de ${total}: ¡listo!`
+              : `${chosen.length} de ${total} preguntas elegidas`}
           </p>
-          <Button type="button" disabled={!questions || !enoughChosen} onClick={() => setStep("responder")}>
+          <Button type="button" disabled={!questions || !exactChosen} onClick={() => setStep("responder")}>
             Siguiente
           </Button>
         </BottomBar>
