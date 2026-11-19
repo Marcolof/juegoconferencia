@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/supabase-server";
 import { Badge, Flash, Initials, PageTitle, inputClass, secondaryButtonClass } from "@/components/ui";
+import { DeletePlayerButton } from "@/components/DeletePlayerButton";
 
 export const dynamic = "force-dynamic";
 
@@ -110,6 +111,11 @@ export default async function PersonasPage({
               <th className="px-4 py-3 font-medium">Estado</th>
               {!showAdmins && <th className="px-4 py-3 font-medium">Respuestas</th>}
               {!showAdmins && <th className="px-4 py-3 text-right font-medium">Puntos</th>}
+              {!showAdmins && (
+                <th className="w-12 px-2 py-3">
+                  <span className="sr-only">Acciones</span>
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -153,12 +159,20 @@ export default async function PersonasPage({
                       {p.status === "activo" ? (points.get(p.id) ?? 0) : "—"}
                     </td>
                   )}
+                  {!showAdmins && (
+                    <td className="px-2 py-3 text-right">
+                      <DeletePlayerButton
+                        id={p.id}
+                        name={named ? `${p.first_name} ${p.last_name}`.trim() : p.email}
+                      />
+                    </td>
+                  )}
                 </tr>
               );
             })}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-muted">
+                <td colSpan={6} className="px-4 py-10 text-center text-muted">
                   No hay cuentas para mostrar.
                 </td>
               </tr>

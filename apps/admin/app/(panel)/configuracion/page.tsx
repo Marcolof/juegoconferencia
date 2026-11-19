@@ -59,7 +59,8 @@ export default async function ConfiguracionPage({
                 className={`${inputClass} w-32`}
               />
               <span className="text-xs text-muted">
-                Cuenta las preguntas fijas, que son obligatorias. Se pide al guardar respuestas (R81).
+                Cada jugador elige libremente qué preguntas responde; este es el mínimo. Se pide al guardar respuestas
+                (R81, R90).
               </span>
             </label>
             <label className="flex flex-col gap-1.5">

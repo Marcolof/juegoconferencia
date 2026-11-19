@@ -101,6 +101,28 @@ export async function deleteAccount(id: string, form: FormData) {
   back("/personas", "ok", "Cuenta borrada.");
 }
 
+/**
+ * Elimina un jugador desde el listado de Personas, después de confirmar en
+ * el modal (F37, R91). Se borra la cuenta de acceso, así que la persona
+ * puede volver a registrarse con el mismo email: no queda bloqueada.
+ */
+export async function deletePlayer(id: string) {
+  const admin = await requireAdmin();
+  const path = "/personas";
+  if (id === admin.userId) back(path, "error", "No podés eliminar tu propia cuenta.");
+  const { data } = await admin.db
+    .from("profiles")
+    .select("first_name, last_name, role, photo_path")
+    .eq("id", id)
+    .maybeSingle();
+  if (!data) back(path, "error", "Esa cuenta ya no existe.");
+  if (data.role !== "jugador") back(path, "error", "Desde aquí sólo se eliminan jugadores.");
+  if (data.photo_path) await admin.db.storage.from(PHOTOS_BUCKET).remove([data.photo_path]);
+  const { error } = await admin.db.auth.admin.deleteUser(id);
+  if (error) back(path, "error", "No se pudo eliminar la cuenta.");
+  back(path, "ok", `Se eliminó a ${data.first_name} ${data.last_name}. Puede volver a crear su cuenta cuando quiera.`);
+}
+
 // ---------- Respuestas (R71) ----------
 
 export async function setAnswerHidden(playerId: string, questionId: number, hidden: boolean, returnTo: string) {

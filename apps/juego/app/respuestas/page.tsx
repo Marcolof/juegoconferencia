@@ -11,7 +11,8 @@ type Step = "resumen" | "elegir" | "responder";
 
 /**
  * Cuestionario en dos pasos (F34, R80 a R82):
- * 1. Elegir qué preguntas responder. Las fijas vienen marcadas y no se desmarcan.
+ * 1. Elegir qué preguntas responder. Si alguna es obligatoria (is_fixed), viene
+ *    marcada y no se desmarca. Desde F37 ninguna lo es.
  * 2. Responder sólo las elegidas.
  * El botón para avanzar queda flotando abajo para que se vea con la lista larga.
  * Si ya las había guardado, primero ve sólo sus preguntas y un botón para
@@ -147,7 +148,13 @@ export default function RespuestasPage() {
       <Screen title="Elegí tus preguntas" back={canGoHome ? "/" : undefined}>
         <p className="text-muted">
           Marcá las preguntas que querés responder: otros jugadores van a tener que adivinar tus respuestas charlando con
-          vos. Elegí al menos {min}. Las que dicen <strong>obligatoria</strong> ya vienen marcadas.
+          vos. Elegí al menos {min}.
+          {questions?.some((q) => q.is_fixed) && (
+            <>
+              {" "}
+              Las que dicen <strong>obligatoria</strong> ya vienen marcadas.
+            </>
+          )}
         </p>
 
         {!questions ? (
