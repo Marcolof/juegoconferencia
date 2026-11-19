@@ -161,6 +161,19 @@ export function PlayerGate({ status }: { status: PlayerStatus }) {
       </Screen>
     );
   }
+  if (status === "admin") {
+    return (
+      <Screen title="Cuenta de administración">
+        <Notice>
+          Esta cuenta es de administración y no juega. Entrá al panel de administración para ver el ranking y
+          gestionar el juego.
+        </Notice>
+        <Button variant="secondary" className="mt-6" onClick={() => void signOutAndGo()}>
+          Salir
+        </Button>
+      </Screen>
+    );
+  }
   if (status === "suspended") {
     return (
       <Screen title="Cuenta suspendida">

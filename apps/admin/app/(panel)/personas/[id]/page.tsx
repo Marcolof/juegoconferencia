@@ -75,7 +75,7 @@ export default async function PersonaPage({
         <Initials firstName={p.first_name} lastName={p.last_name} url={photo.data?.signedUrl} size={64} />
         <div className="flex-1">
           <h1 className="text-2xl font-bold">
-            {p.first_name} {p.last_name}
+            {p.first_name === "Sin nombre" ? p.email : `${p.first_name} ${p.last_name}`.trim()}
           </h1>
           <p className="text-muted">{p.email}</p>
         </div>
@@ -88,6 +88,15 @@ export default async function PersonaPage({
       <Flash ok={ok} error={error} />
 
       <div className="grid gap-5 lg:grid-cols-2">
+        {p.role === "admin" && (
+          <Card className="lg:col-span-2">
+            <p className="text-sm text-muted">
+              Cuenta de administración: no juega, no tiene puntos ni respuestas y no aparece en el ranking.
+            </p>
+          </Card>
+        )}
+
+        {p.role !== "admin" && (
         <Card>
           <h2 className="font-bold">Juego</h2>
           <dl className="mt-3 grid grid-cols-3 gap-3 text-center">
@@ -105,6 +114,7 @@ export default async function PersonaPage({
             </div>
           </dl>
         </Card>
+        )}
 
         <Card>
           <h2 className="font-bold">Nombre</h2>
@@ -115,6 +125,7 @@ export default async function PersonaPage({
           </form>
         </Card>
 
+        {p.role !== "admin" && (
         <Card className="lg:col-span-2">
           <h2 className="font-bold">Respuestas</h2>
           <p className="mt-1 text-sm text-muted">Una respuesta oculta deja de aparecer como opción falsa (R71).</p>
@@ -139,6 +150,7 @@ export default async function PersonaPage({
             })}
           </ul>
         </Card>
+        )}
 
         <Card>
           <h2 className="font-bold">Rol</h2>

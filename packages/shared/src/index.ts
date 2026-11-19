@@ -131,6 +131,7 @@ export function gameErrorMessage(raw: string | undefined | null): string {
     qr_invalido: "Ese QR no es de este juego.",
     mismo_jugador: "Ese es tu propio QR.",
     otro_suspendido: "Esa cuenta no puede jugar.",
+    admin_no_juega: "Las cuentas de administración no juegan.",
     ya_jugaron: "Ya jugaron juntos: cada pareja juega una sola vez.",
     no_es_tu_turno: "Todavía no es tu turno.",
     ya_respondiste: "Ya respondiste.",

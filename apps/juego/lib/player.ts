@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { MyState } from "@juego/shared";
 import { getSupabase } from "./supabase";
 
-export type PlayerStatus = "loading" | "ok" | "no-config" | "suspended" | "error";
+export type PlayerStatus = "loading" | "ok" | "no-config" | "suspended" | "admin" | "error";
 
 const PENDING_QR_KEY = "juego:qr-pendiente";
 
@@ -44,6 +44,11 @@ export function usePlayer(gate: "auth" | "ready") {
     setState(s);
     if (s.status === "suspendido") {
       setStatus("suspended");
+      return s;
+    }
+    // Las cuentas de administración no juegan: usan el panel.
+    if (s.role === "admin") {
+      setStatus("admin");
       return s;
     }
     if (gate === "ready") {

@@ -17,8 +17,8 @@ export default async function ResumenPage() {
   };
 
   const [registered, suspended, admins, completed, inProgress, expired, settings] = await Promise.all([
-    count("profiles"),
-    count("profiles", (q) => q.eq("status", "suspendido")),
+    count("profiles", (q) => q.eq("role", "jugador")),
+    count("profiles", (q) => q.eq("role", "jugador").eq("status", "suspendido")),
     count("profiles", (q) => q.eq("role", "admin")),
     count("encounters", (q) => q.eq("status", "completo")),
     count("encounters", (q) => q.in("status", ["turno_a", "turno_b"])),
@@ -27,12 +27,12 @@ export default async function ResumenPage() {
   ]);
 
   const stats = [
-    { label: "Registrados", value: registered, href: "/personas" },
+    { label: "Jugadores registrados", value: registered, href: "/personas" },
     { label: "Encuentros completos", value: completed },
     { label: "Encuentros en curso", value: inProgress },
     { label: "Encuentros vencidos", value: expired },
-    { label: "Cuentas suspendidas", value: suspended, href: "/personas" },
-    { label: "Administradores", value: admins, href: "/personas" },
+    { label: "Jugadores suspendidos", value: suspended, href: "/personas" },
+    { label: "Cuentas de administración", value: admins, href: "/personas?rol=admin" },
   ];
 
   const s = settings.data;
