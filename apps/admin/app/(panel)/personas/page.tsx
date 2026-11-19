@@ -34,14 +34,23 @@ export default async function PersonasPage({
     query = query.or(`email.ilike.%${term}%,first_name.ilike.%${term}%,last_name.ilike.%${term}%`);
   }
 
-  const [{ data: people }, { data: ranking }, { data: answers }, { count: adminCount }, { count: playerCount }] =
-    await Promise.all([
-      query,
-      db.rpc("ranking_rows"),
-      db.from("answers").select("player_id"),
-      db.from("profiles").select("*", { count: "exact", head: true }).eq("role", "admin"),
-      db.from("profiles").select("*", { count: "exact", head: true }).eq("role", "jugador"),
-    ]);
+  const [
+    { data: people },
+    { data: ranking },
+    { data: answers },
+    { count: adminCount },
+    { count: playerCount },
+    { data: settings },
+  ] = await Promise.all([
+    query,
+    db.rpc("ranking_rows"),
+    db.from("answers").select("player_id"),
+    db.from("profiles").select("*", { count: "exact", head: true }).eq("role", "admin"),
+    db.from("profiles").select("*", { count: "exact", head: true }).eq("role", "jugador"),
+    db.from("settings").select("min_answers").eq("id", 1).single(),
+  ]);
+  // Cada jugador elige cuántas preguntas responde (R81): se compara con el mínimo configurado.
+  const minAnswers: number = settings?.min_answers ?? 4;
 
   const points = new Map<string, number>();
   for (const r of (ranking ?? []) as { player_id: string; points: number }[]) points.set(r.player_id, r.points);
@@ -125,7 +134,20 @@ export default async function PersonasPage({
                   <td className="px-4 py-3">
                     {p.status === "activo" ? <Badge tone="ok">Activa</Badge> : <Badge tone="bad">Suspendida</Badge>}
                   </td>
-                  {!showAdmins && <td className="px-4 py-3 tabular-nums">{answered.get(p.id) ?? 0}/4</td>}
+                  {!showAdmins && (
+                    <td className="px-4 py-3 tabular-nums">
+                      {(() => {
+                        const n = answered.get(p.id) ?? 0;
+                        return n >= minAnswers ? (
+                          n
+                        ) : (
+                          <span className="text-bad" title={`Le faltan respuestas: el mínimo es ${minAnswers}`}>
+                            {n} <span className="text-xs">(mín. {minAnswers})</span>
+                          </span>
+                        );
+                      })()}
+                    </td>
+                  )}
                   {!showAdmins && (
                     <td className="px-4 py-3 text-right font-bold tabular-nums">
                       {p.status === "activo" ? (points.get(p.id) ?? 0) : "—"}
