@@ -3,6 +3,7 @@ import { Sparkles, TriangleAlert } from "lucide-react";
 import type { AdminSession } from "@/lib/supabase-server";
 import { setAnswerHidden } from "../actions";
 import { secondaryButtonClass } from "@/components/ui";
+import { pressableClass } from "@juego/shared/ui";
 
 // Piezas compartidas por la pantalla Respuestas y el detalle de cada pregunta (F45).
 
@@ -108,13 +109,13 @@ export function HiddenFilter({ base, onlyHidden, extra = "" }: { base: string; o
     <div className="flex gap-2 text-sm">
       <Link
         href={`${base}${all}`}
-        className={`rounded-lg px-3 py-2 ${!onlyHidden ? "bg-brand text-white" : "bg-surface ring-1 ring-line"}`}
+        className={`rounded-lg px-3 py-2 ${pressableClass} ${!onlyHidden ? "bg-brand text-white" : "bg-surface ring-1 ring-line"}`}
       >
         Todas
       </Link>
       <Link
         href={`${base}${hidden}`}
-        className={`rounded-lg px-3 py-2 ${onlyHidden ? "bg-brand text-white" : "bg-surface ring-1 ring-line"}`}
+        className={`rounded-lg px-3 py-2 ${pressableClass} ${onlyHidden ? "bg-brand text-white" : "bg-surface ring-1 ring-line"}`}
       >
         Sólo ocultas
       </Link>

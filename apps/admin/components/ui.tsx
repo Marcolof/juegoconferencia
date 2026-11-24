@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { buttonClass as sharedButtonClass, type ButtonStyleOptions } from "@juego/shared/ui";
 import { initials } from "@juego/shared";
 
 export function PageTitle({ title, subtitle }: { title: string; subtitle?: string }) {
@@ -56,9 +58,30 @@ export function Initials({ firstName, lastName, url, size = 36 }: {
 
 export const inputClass =
   "min-h-10 rounded-lg border border-line bg-surface px-3 outline-none focus:border-brand";
-export const buttonClass =
-  "inline-flex min-h-10 items-center justify-center rounded-lg bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-strong disabled:opacity-50";
-export const secondaryButtonClass =
-  "inline-flex min-h-10 items-center justify-center rounded-lg bg-surface px-4 text-sm font-semibold ring-1 ring-line hover:bg-canvas";
-export const dangerButtonClass =
-  "inline-flex min-h-10 items-center justify-center rounded-lg bg-bad px-4 text-sm font-semibold text-white hover:opacity-90";
+// Botones (F46): estilos compartidos con el juego, con estados pressed y focus.
+export const buttonClass = sharedButtonClass({ variant: "primary" });
+export const secondaryButtonClass = sharedButtonClass({ variant: "secondary" });
+export const dangerButtonClass = sharedButtonClass({ variant: "danger" });
+
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & Omit<ButtonStyleOptions, "className">;
+
+/** Botón reutilizable del panel. */
+export function Button({ variant, size, block, className, type = "button", ...props }: ButtonProps) {
+  return <button type={type} className={sharedButtonClass({ variant, size, block, className })} {...props} />;
+}
+
+/** Enlace con aspecto de botón (mismos estados). */
+export function LinkButton({
+  href,
+  variant,
+  size,
+  block,
+  className,
+  children,
+}: Omit<ButtonStyleOptions, "className"> & { href: string; className?: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} className={sharedButtonClass({ variant, size, block, className })}>
+      {children}
+    </Link>
+  );
+}

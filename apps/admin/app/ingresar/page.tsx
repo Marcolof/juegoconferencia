@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { gameErrorMessage } from "@juego/shared";
 import { getBrowserClient } from "@/lib/supabase-browser";
+import { buttonClass } from "@juego/shared/ui";
 
 function LoginForm() {
   const router = useRouter();
@@ -67,7 +68,7 @@ function LoginForm() {
       <button
         type="submit"
         disabled={busy}
-        className="min-h-11 rounded-xl bg-brand font-semibold text-white disabled:opacity-50"
+        className={buttonClass({ variant: "primary", className: "min-h-11 rounded-xl text-base" })}
       >
         {busy ? "Ingresando…" : "Ingresar"}
       </button>

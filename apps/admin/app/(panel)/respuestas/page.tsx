@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight, LayoutGrid, List } from "lucide-react";
 import { requireAdmin } from "@/lib/supabase-server";
+import { pressableClass } from "@juego/shared/ui";
 import { Card, Flash, PageTitle } from "@/components/ui";
 import { AiSummary } from "./AiSummary";
 import { AnswerItem, HiddenFilter, loadAnswers, plural } from "./shared";
@@ -55,7 +56,7 @@ export default async function RespuestasPage({
             aria-label="Vista de tarjetas"
             aria-current={view === "tarjetas" ? "true" : undefined}
             title="Vista de tarjetas"
-            className={`grid size-9 place-items-center rounded-md ${
+            className={`grid size-9 place-items-center rounded-md ${pressableClass} ${
               view === "tarjetas" ? "bg-brand text-white" : "text-muted hover:bg-canvas"
             }`}
           >
@@ -66,7 +67,7 @@ export default async function RespuestasPage({
             aria-label="Vista de lista"
             aria-current={view === "lista" ? "true" : undefined}
             title="Vista de lista"
-            className={`grid size-9 place-items-center rounded-md ${
+            className={`grid size-9 place-items-center rounded-md ${pressableClass} ${
               view === "lista" ? "bg-brand text-white" : "text-muted hover:bg-canvas"
             }`}
           >
@@ -84,7 +85,7 @@ export default async function RespuestasPage({
                 <li key={q.id}>
                   <Link
                     href={`/respuestas/${q.id}${detailQuery}`}
-                    className="flex items-center gap-4 px-5 py-4 transition hover:bg-canvas"
+                    className="flex items-center gap-4 px-5 py-4 outline-none transition hover:bg-canvas focus-visible:bg-brand-soft active:bg-brand-soft"
                   >
                     <span className="min-w-0 flex-1 font-medium">{q.text}</span>
                     <span className="shrink-0 text-sm text-muted tabular-nums">{plural(count)}</span>

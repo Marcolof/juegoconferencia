@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Play, Square, TriangleAlert, X } from "lucide-react";
 import { endCompetitionNow, startCompetitionNow } from "@/app/(panel)/actions";
+import { buttonClass } from "@juego/shared/ui";
 
 /**
  * Un solo botón para iniciar o finalizar el juego (F44, R102). Cambia según el
@@ -24,9 +25,7 @@ export function GameToggleButton({ running }: { running: boolean }) {
       <button
         type="button"
         onClick={open}
-        className={`inline-flex min-h-11 items-center gap-2 rounded-lg px-5 text-sm font-semibold transition ${
-          running ? "bg-bad text-white hover:opacity-90" : "bg-ok text-white hover:opacity-90"
-        }`}
+        className={buttonClass({ variant: running ? "danger" : "success", className: "min-h-11 px-5" })}
       >
         <Icon size={16} aria-hidden />
         {label}
@@ -91,16 +90,14 @@ export function GameToggleButton({ running }: { running: boolean }) {
               type="button"
               onClick={close}
               disabled={busy}
-              className="inline-flex min-h-10 items-center rounded-lg bg-surface px-4 text-sm font-semibold ring-1 ring-line hover:bg-canvas disabled:opacity-50"
+              className={buttonClass({ variant: "secondary" })}
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={busy}
-              className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60 ${
-                running ? "bg-bad" : "bg-ok"
-              }`}
+              className={buttonClass({ variant: running ? "danger" : "success" })}
             >
               <Icon size={16} aria-hidden />
               {busy ? (running ? "Finalizando…" : "Iniciando…") : running ? "Sí, finalizar" : "Sí, iniciar"}

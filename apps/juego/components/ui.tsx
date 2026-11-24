@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { buttonClass, type ButtonSize } from "@juego/shared/ui";
 import { ArrowLeft } from "lucide-react";
 import { initials } from "@juego/shared";
 import type { PlayerStatus } from "@/lib/player";
@@ -36,35 +37,37 @@ export function Screen({
   );
 }
 
-const buttonBase =
-  "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-5 text-base font-semibold transition disabled:opacity-50";
-const variants = {
-  primary: "bg-brand text-white active:bg-brand-strong",
-  secondary: "bg-surface text-ink ring-1 ring-line active:bg-brand-soft",
-  ghost: "text-brand underline-offset-4 hover:underline",
-};
+// Botones (F46): estilos compartidos con el panel, con estados pressed y focus.
+// En el juego los botones son grandes y ocupan todo el ancho, salvo que se indique otra cosa.
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "success";
 
 export function Button({
   variant = "primary",
+  size = "lg",
+  block = true,
   className = "",
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: keyof typeof variants }) {
-  return <button className={`${buttonBase} ${variants[variant]} ${className}`} {...props} />;
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: ButtonSize; block?: boolean }) {
+  return <button className={buttonClass({ variant, size, block, className })} {...props} />;
 }
 
 export function LinkButton({
   href,
   variant = "primary",
+  size = "lg",
+  block = true,
   className = "",
   children,
 }: {
   href: string;
-  variant?: keyof typeof variants;
+  variant?: Variant;
+  size?: ButtonSize;
+  block?: boolean;
   className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <Link href={href} className={`${buttonBase} ${variants[variant]} ${className}`}>
+    <Link href={href} className={buttonClass({ variant, size, block, className })}>
       {children}
     </Link>
   );

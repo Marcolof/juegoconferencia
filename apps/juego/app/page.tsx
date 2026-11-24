@@ -12,6 +12,7 @@ import { CompetitionNotice } from "@/components/CompetitionNotice";
 import { CompleteAnswersModal } from "@/components/CompleteAnswersModal";
 import { Ranking } from "@/components/Ranking";
 import { Tour } from "@/components/Tour";
+import { pressableClass } from "@juego/shared/ui";
 import { Avatar, LinkButton, PlayerGate, Screen, signOutAndGo } from "@/components/ui";
 
 // Recuerda en la sesión que el tour ya se vio, por si la base tarda en guardarlo.
@@ -34,7 +35,7 @@ function markTourSeenInSession() {
 }
 
 const chip =
-  "flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-surface px-3 text-sm font-semibold text-ink ring-1 ring-line transition active:bg-brand-soft";
+  `flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-surface px-3 text-sm font-semibold text-ink ring-1 ring-line hover:bg-canvas active:bg-brand-soft active:ring-brand ${pressableClass}`;
 
 export default function PrincipalPage() {
   const router = useRouter();
@@ -86,7 +87,7 @@ export default function PrincipalPage() {
         </div>
         <button
           onClick={() => void signOutAndGo()}
-          className="flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-medium text-muted transition hover:bg-surface active:bg-surface"
+          className={`flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-medium text-muted hover:bg-surface active:bg-brand-soft ${pressableClass}`}
         >
           <LogOut size={18} aria-hidden />
           Salir

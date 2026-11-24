@@ -1,5 +1,6 @@
 "use client";
 
+import { pressableClass } from "./button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 /**
@@ -43,7 +44,7 @@ export function Pagination({ page, totalPages, onPageChange, label = "Páginas",
     if (p >= 1 && p <= totalPages && p !== current) onPageChange(p);
   };
   const arrow =
-    "grid size-10 place-items-center rounded-xl bg-surface ring-1 ring-line transition hover:bg-brand-soft disabled:pointer-events-none disabled:opacity-40";
+    `grid size-10 place-items-center rounded-xl bg-surface ring-1 ring-line hover:bg-brand-soft active:bg-brand-soft disabled:pointer-events-none disabled:opacity-40 ${pressableClass}`;
 
   return (
     <nav aria-label={label} className={`flex items-center justify-center gap-1.5 ${className}`}>
@@ -63,8 +64,8 @@ export function Pagination({ page, totalPages, onPageChange, label = "Páginas",
                 onClick={() => go(item)}
                 aria-label={`Página ${item}`}
                 aria-current={item === current ? "page" : undefined}
-                className={`min-w-10 rounded-xl px-2 py-2 text-sm font-semibold tabular-nums transition ${
-                  item === current ? "bg-brand text-white" : "bg-surface ring-1 ring-line hover:bg-brand-soft"
+                className={`min-w-10 rounded-xl px-2 py-2 text-sm font-semibold tabular-nums ${pressableClass} ${
+                  item === current ? "bg-brand text-white" : "bg-surface ring-1 ring-line hover:bg-brand-soft active:bg-brand-soft"
                 }`}
               >
                 {item}

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Trash2, TriangleAlert, X } from "lucide-react";
 import { deletePlayer } from "@/app/(panel)/actions";
+import { buttonClass } from "@juego/shared/ui";
 
 /**
  * Botón de tachito para eliminar un jugador desde el listado de Personas
@@ -76,14 +77,14 @@ export function DeletePlayerButton({ id, name }: { id: string; name: string }) {
               type="button"
               onClick={close}
               disabled={busy}
-              className="inline-flex min-h-10 items-center rounded-lg bg-surface px-4 text-sm font-semibold ring-1 ring-line hover:bg-canvas disabled:opacity-50"
+              className={buttonClass({ variant: "secondary" })}
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={busy}
-              className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-bad px-4 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+              className={buttonClass({ variant: "danger" })}
             >
               <Trash2 size={16} aria-hidden />
               {busy ? "Eliminando…" : "Eliminar"}

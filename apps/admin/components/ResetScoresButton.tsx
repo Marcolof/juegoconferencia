@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { RotateCcw, TriangleAlert, X } from "lucide-react";
 import { resetScores } from "@/app/(panel)/actions";
+import { buttonClass } from "@juego/shared/ui";
 
 /**
  * Botón para resetear el juego. Abre un modal con dos opciones (F44, R103):
@@ -32,7 +33,7 @@ export function ResetScoresButton() {
       <button
         type="button"
         onClick={open}
-        className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-surface px-4 text-sm font-semibold text-bad ring-1 ring-line transition hover:bg-bad-soft"
+        className={buttonClass({ variant: "dangerOutline" })}
       >
         <RotateCcw size={16} aria-hidden />
         Resetear
@@ -123,14 +124,14 @@ export function ResetScoresButton() {
               type="button"
               onClick={close}
               disabled={busy}
-              className="inline-flex min-h-10 items-center rounded-lg bg-surface px-4 text-sm font-semibold ring-1 ring-line hover:bg-canvas disabled:opacity-50"
+              className={buttonClass({ variant: "secondary" })}
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={busy}
-              className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-bad px-4 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+              className={buttonClass({ variant: "danger" })}
             >
               <RotateCcw size={16} aria-hidden />
               {busy ? "Reseteando…" : withAnswers ? "Sí, resetear puntaje y respuestas" : "Sí, resetear el puntaje"}

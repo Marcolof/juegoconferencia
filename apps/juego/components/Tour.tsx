@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { MessagesSquare, QrCode, Trophy, Users, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui";
+import { pressableClass } from "@juego/shared/ui";
 
 /** Pasos del tour de bienvenida (F34, R83). Íconos de Lucide (F35). */
 const STEPS: readonly { icon: LucideIcon; title: string; text: string }[] = [
@@ -68,7 +69,7 @@ export function Tour({ open, onClose }: { open: boolean; onClose: () => void }) 
             {i + 1} de {STEPS.length}
           </span>
           {!last && (
-            <button onClick={onClose} className="text-sm text-muted underline-offset-4 hover:underline">
+            <button onClick={onClose} className={`rounded-md text-sm text-muted underline-offset-4 hover:underline ${pressableClass}`}>
               Saltar
             </button>
           )}

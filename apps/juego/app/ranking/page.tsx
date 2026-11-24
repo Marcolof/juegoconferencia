@@ -91,7 +91,7 @@ export default function RankingCompletoPage() {
             type="button"
             onClick={() => setQuery("")}
             aria-label="Borrar la búsqueda"
-            className="absolute right-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full text-muted hover:bg-canvas"
+            className="absolute right-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full text-muted outline-none transition hover:bg-canvas focus-visible:ring-2 focus-visible:ring-brand active:bg-brand-soft"
           >
             <X size={18} aria-hidden />
           </button>
