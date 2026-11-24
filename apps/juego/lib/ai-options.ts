@@ -11,7 +11,9 @@ import { MAX_ANSWER_LENGTH, normalizeAnswer } from "@juego/shared";
 
 export const AI_MODEL = "claude-opus-5-5";
 /** Modelos de Gemini a probar, en orden (el primero que exista y responda). Configurable con GEMINI_MODEL. */
-const GEMINI_MODELS = ["gemini-3.8-flash", "gemini-3.5-flash-lite"];
+const GEMINI_MODELS = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.6-flash"];
+/** Errores pasajeros de Gemini: saturado o sin cupo en el momento. */
+const TRANSIENT = new Set([429, 500, 502, 503, 504]);
 /** Opciones falsas que se piden por respuesta (en el encuentro se usan 2 al azar). */
 const OPTIONS_PER_ANSWER = 6;
 /** Mínimo de opciones válidas para guardar el resultado. */
@@ -156,17 +158,25 @@ async function askGemini(apiKey: string, models: string[], pending: PendingAnswe
 
   let lastError = new AiProviderError("gemini_sin_modelo");
   for (const model of models) {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
-      body,
-      signal: AbortSignal.timeout(45_000),
-    });
+    // Un error pasajero (modelo saturado) se reintenta una vez en el mismo modelo.
+    let res: Response | null = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
+        body,
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!TRANSIENT.has(res.status) || attempt === 1) break;
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+    if (!res) continue;
     if (!res.ok) {
       const detail = (await res.text().catch(() => "")).slice(0, 300);
       lastError = new AiProviderError(`gemini ${model} ${res.status}: ${detail}`, res.status);
-      // Modelo inexistente o pedido no aceptado: probar el siguiente. Otros (clave, cupo): cortar.
-      if (res.status === 404 || res.status === 400) continue;
+      // Modelo inexistente, pedido no aceptado, saturado o sin cupo: probar el siguiente modelo.
+      if (res.status === 404 || res.status === 400 || TRANSIENT.has(res.status)) continue;
+      // Clave inválida u otro error: no tiene sentido seguir.
       throw lastError;
     }
     const data = (await res.json()) as {
