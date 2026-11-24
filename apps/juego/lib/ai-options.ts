@@ -254,14 +254,28 @@ export async function generateForPlayer(
 
   const items = await provider.ask(pending);
   const byQ = new Map(items.map((i) => [Number(i.question_id), i]));
+  // Si la IA devuelve algo que no se puede usar, queda registrado en el log del servidor.
+  console.log(
+    `opciones-ia: ${provider.name}:${provider.model} pidió ${pending.length} respuestas, devolvió ${items.length}`,
+  );
 
   const rows = [];
   let flagged = 0;
   for (const p of pending) {
     const item = byQ.get(p.question_id);
-    if (!item) continue;
+    if (!item) {
+      console.warn(`opciones-ia: la IA no devolvió la pregunta ${p.question_id}`);
+      continue;
+    }
     const options = sanitizeDistractors(p.answer, item.distractors);
-    if (options.length < MIN_VALID_OPTIONS) continue;
+    if (options.length < MIN_VALID_OPTIONS) {
+      console.warn(
+        `opciones-ia: pregunta ${p.question_id}: quedaron ${options.length} opciones válidas de ${
+          Array.isArray(item.distractors) ? item.distractors.length : "ninguna"
+        } devueltas`,
+      );
+      continue;
+    }
     const isFlagged = item.inappropriate === true;
     if (isFlagged) flagged++;
     rows.push({
@@ -278,6 +292,7 @@ export async function generateForPlayer(
   if (rows.length > 0) {
     const { error } = await db.from("ai_distractors").upsert(rows, { onConflict: "player_id,question_id" });
     // Si la respuesta se borró mientras tanto, la clave foránea lo rechaza: no es grave.
+    if (error) console.error("opciones-ia: no se pudo guardar:", error.message);
     if (error && !error.message.includes("foreign key")) throw new Error("guardado_fallido");
   }
   return { pending: pending.length, saved: rows.length, flagged };
