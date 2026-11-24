@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Check, PencilLine } from "lucide-react";
 import { MAX_ANSWER_LENGTH, gameErrorMessage, type Question } from "@juego/shared";
 import { usePlayer } from "@/lib/player";
+import { requestAiOptions } from "@/lib/ai-request";
 import { Button, Notice, PlayerGate, Screen, Spinner } from "@/components/ui";
 
 type Step = "resumen" | "elegir" | "responder";
@@ -86,6 +87,7 @@ export default function RespuestasPage() {
       setError(gameErrorMessage(error.message));
       return;
     }
+    void requestAiOptions(supabase);
     router.replace("/");
   }
 
