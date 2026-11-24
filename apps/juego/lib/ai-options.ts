@@ -300,11 +300,23 @@ export async function generateForPlayer(
 
 /** Jugadores activos con alguna respuesta sin opciones de IA vigentes. */
 export async function findPendingPlayers(db: SupabaseClient): Promise<string[]> {
-  const [{ data: players }, { data: answers }, { data: ai }] = await Promise.all([
+  const [
+    { data: players, error: e1 },
+    { data: answers, error: e2 },
+    { data: ai, error: e3 },
+  ] = await Promise.all([
     db.from("profiles").select("id").eq("role", "jugador").eq("status", "activo"),
     db.from("answers").select("player_id, question_id, text"),
     db.from("ai_distractors").select("player_id, question_id, answer_text"),
   ]);
+  // Un error de lectura no puede parecer "no hay nada pendiente".
+  if (e1 || e2 || e3) {
+    console.error("opciones-ia: lectura fallida", e1?.message ?? e2?.message ?? e3?.message);
+    throw new Error("lectura_fallida");
+  }
+  console.log(
+    `opciones-ia: pendientes -> ${players?.length ?? 0} jugadores activos, ${answers?.length ?? 0} respuestas, ${ai?.length ?? 0} con IA`,
+  );
   const active = new Set((players ?? []).map((p) => p.id as string));
   const done = new Set((ai ?? []).map((r) => `${r.player_id}|${r.question_id}|${r.answer_text}`));
   const pending = new Set<string>();
