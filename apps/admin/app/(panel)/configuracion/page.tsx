@@ -129,7 +129,7 @@ export default async function ConfiguracionPage({
       <Card className="mb-5">
         <h2 className="font-bold">Opciones con IA</h2>
         <p className="mt-1 text-sm text-muted">
-          Cuando un jugador guarda sus respuestas, Claude genera las opciones falsas: del mismo tipo que la respuesta real
+          Cuando un jugador guarda sus respuestas, la IA genera las opciones falsas: del mismo tipo que la respuesta real
           pero que no puedan ser verdad a la vez (para «Caribe», nunca «Playa»). Si la IA no está disponible, el juego usa
           las respuestas de otros jugadores y el listado de respaldo (R97).
         </p>

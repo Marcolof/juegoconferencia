@@ -9,9 +9,8 @@
 // regla anterior (respuestas de otros jugadores y listado de respaldo).
 
 import { NextResponse, type NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
-import { findPendingPlayers, generateForPlayer } from "@/lib/ai-options";
+import { AiProviderError, createProvider, findPendingPlayers, generateForPlayer } from "@/lib/ai-options";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,8 +38,8 @@ export function OPTIONS() {
 export async function POST(req: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const aiKey = process.env.ANTHROPIC_API_KEY;
-  if (!url || !serviceKey || !aiKey) return reply({ ok: false, error: "ia_no_configurada" }, 503);
+  const provider = createProvider();
+  if (!url || !serviceKey || !provider) return reply({ ok: false, error: "ia_no_configurada" }, 503);
 
   const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
   if (!token) return reply({ ok: false, error: "no_autenticado" }, 401);
@@ -51,7 +50,6 @@ export async function POST(req: NextRequest) {
   if (!user) return reply({ ok: false, error: "no_autenticado" }, 401);
 
   const body = (await req.json().catch(() => ({}))) as { modo?: string };
-  const anthropic = new Anthropic({ apiKey: aiKey });
 
   try {
     if (body.modo === "pendientes") {
@@ -60,7 +58,7 @@ export async function POST(req: NextRequest) {
 
       const pending = await findPendingPlayers(db);
       const batch = pending.slice(0, PLAYERS_PER_BATCH);
-      const results = await Promise.allSettled(batch.map((id) => generateForPlayer(db, anthropic, id)));
+      const results = await Promise.allSettled(batch.map((id) => generateForPlayer(db, provider, id)));
       const failed = results.filter((r) => r.status === "rejected").length;
       const saved = results.reduce((n, r) => n + (r.status === "fulfilled" ? r.value.saved : 0), 0);
       return reply({
@@ -72,12 +70,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const result = await generateForPlayer(db, anthropic, user.id);
+    const result = await generateForPlayer(db, provider, user.id);
     return reply({ ok: true, ...result });
   } catch (err) {
-    // Typed errors del SDK: el detalle queda en el log del servidor, no se expone.
-    if (err instanceof Anthropic.APIError) {
-      console.error("opciones-ia: error de la API de Claude", err.status, err.message);
+    // Errores del proveedor de IA (Gemini o Claude): el detalle queda en el log, no se expone.
+    if (err instanceof AiProviderError || (err instanceof Error && "status" in err)) {
+      console.error(`opciones-ia: error de ${provider.name}`, err.message);
       return reply({ ok: false, error: "ia_error" }, 502);
     }
     console.error("opciones-ia:", err instanceof Error ? err.message : err);

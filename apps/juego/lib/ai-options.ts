@@ -10,6 +10,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { MAX_ANSWER_LENGTH, normalizeAnswer } from "@juego/shared";
 
 export const AI_MODEL = "claude-opus-5-5";
+/** Modelos de Gemini a probar, en orden (el primero que exista y responda). Configurable con GEMINI_MODEL. */
+const GEMINI_MODELS = ["gemini-3.8-flash", "gemini-3.5-flash-lite"];
 /** Opciones falsas que se piden por respuesta (en el encuentro se usan 2 al azar). */
 const OPTIONS_PER_ANSWER = 6;
 /** Mínimo de opciones válidas para guardar el resultado. */
@@ -85,6 +87,107 @@ export function sanitizeDistractors(real: string, raw: unknown): string[] {
   return out;
 }
 
+/** Error de un proveedor de IA (se registra en el log; al cliente sólo le llega "ia_error"). */
+export class AiProviderError extends Error {
+  status?: number;
+  constructor(message: string, status?: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
+/** Un proveedor de IA: recibe las respuestas pendientes de un jugador y devuelve las opciones. */
+export interface AiProvider {
+  name: "gemini" | "claude";
+  model: string;
+  ask: (pending: PendingAnswer[]) => Promise<AiItem[]>;
+}
+
+/** Elige el proveedor según las claves cargadas: Gemini (gratis) primero, si no Claude. */
+export function createProvider(env: NodeJS.ProcessEnv = process.env): AiProvider | null {
+  const geminiKey = env.GEMINI_API_KEY?.trim();
+  if (geminiKey) {
+    const custom = env.GEMINI_MODEL?.trim();
+    const models = custom ? [custom] : GEMINI_MODELS;
+    const provider: AiProvider = {
+      name: "gemini",
+      model: models[0],
+      ask: async (pending) => {
+        const { items, model } = await askGemini(geminiKey, models, pending);
+        provider.model = model;
+        return items;
+      },
+    };
+    return provider;
+  }
+  const claudeKey = env.ANTHROPIC_API_KEY?.trim();
+  if (claudeKey) {
+    const anthropic = new Anthropic({ apiKey: claudeKey });
+    return { name: "claude", model: AI_MODEL, ask: (pending) => askClaude(anthropic, pending) };
+  }
+  return null;
+}
+
+const GEMINI_FORMAT = `Respondé SOLO con un JSON válido, sin texto adicional ni bloques de código, con esta forma exacta:
+{"items":[{"question_id":<número>,"distractors":["opción 1","opción 2"],"inappropriate":<true|false>,"reason":"<motivo breve o vacío>"}]}
+Un elemento en "items" por cada respuesta recibida, con el mismo question_id.`;
+
+/** Quita un posible bloque de código markdown alrededor de la respuesta. */
+export function extractJson(text: string): string {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  return (fenced ? fenced[1] : text).trim();
+}
+
+/** Una consulta a Gemini (API REST generateContent, sin SDK). Prueba los modelos en orden. */
+async function askGemini(apiKey: string, models: string[], pending: PendingAnswer[]) {
+  const payload = pending.map((p) => ({ question_id: p.question_id, pregunta: p.question, respuesta: p.answer }));
+  const body = JSON.stringify({
+    systemInstruction: { parts: [{ text: SYSTEM }] },
+    contents: [
+      {
+        role: "user",
+        parts: [
+          { text: `Generá las opciones falsas para estas respuestas (JSON):\n${JSON.stringify(payload)}\n\n${GEMINI_FORMAT}` },
+        ],
+      },
+    ],
+    generationConfig: { responseMimeType: "application/json", maxOutputTokens: 8000 },
+  });
+
+  let lastError = new AiProviderError("gemini_sin_modelo");
+  for (const model of models) {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
+      body,
+      signal: AbortSignal.timeout(45_000),
+    });
+    if (!res.ok) {
+      const detail = (await res.text().catch(() => "")).slice(0, 300);
+      lastError = new AiProviderError(`gemini ${model} ${res.status}: ${detail}`, res.status);
+      // Modelo inexistente o pedido no aceptado: probar el siguiente. Otros (clave, cupo): cortar.
+      if (res.status === 404 || res.status === 400) continue;
+      throw lastError;
+    }
+    const data = (await res.json()) as {
+      candidates?: { content?: { parts?: { text?: string }[] }; finishReason?: string }[];
+    };
+    const candidate = data.candidates?.[0];
+    const text = (candidate?.content?.parts ?? []).map((p) => p.text ?? "").join("");
+    if (!text) {
+      lastError = new AiProviderError(`gemini ${model} sin texto (${candidate?.finishReason ?? "?"})`);
+      continue;
+    }
+    try {
+      const parsed = JSON.parse(extractJson(text)) as { items?: AiItem[] };
+      return { items: Array.isArray(parsed.items) ? parsed.items : [], model };
+    } catch {
+      lastError = new AiProviderError(`gemini ${model} devolvió un JSON inválido`);
+    }
+  }
+  throw lastError;
+}
+
 /** Una consulta a Claude con todas las respuestas pendientes de un jugador. */
 async function askClaude(anthropic: Anthropic, pending: PendingAnswer[]): Promise<AiItem[]> {
   const payload = pending.map((p) => ({ question_id: p.question_id, pregunta: p.question, respuesta: p.answer }));
@@ -127,7 +230,7 @@ export interface GenerateResult {
  */
 export async function generateForPlayer(
   db: SupabaseClient,
-  anthropic: Anthropic,
+  provider: AiProvider,
   playerId: string,
 ): Promise<GenerateResult> {
   const [{ data: answers, error: e1 }, { data: existing, error: e2 }, { data: questions, error: e3 }] =
@@ -149,7 +252,7 @@ export async function generateForPlayer(
     }));
   if (pending.length === 0) return { pending: 0, saved: 0, flagged: 0 };
 
-  const items = await askClaude(anthropic, pending);
+  const items = await provider.ask(pending);
   const byQ = new Map(items.map((i) => [Number(i.question_id), i]));
 
   const rows = [];
@@ -168,7 +271,7 @@ export async function generateForPlayer(
       options,
       flagged: isFlagged,
       flag_reason: isFlagged ? String(item.reason ?? "").slice(0, 200) || null : null,
-      model: AI_MODEL,
+      model: `${provider.name}:${provider.model}`,
       created_at: new Date().toISOString(),
     });
   }
