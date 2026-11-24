@@ -46,6 +46,8 @@ export function AiOptionsButton({ pending }: { pending: number }) {
           const text =
             body.error === "ia_no_configurada"
               ? "La IA no está configurada: falta cargar GEMINI_API_KEY (o ANTHROPIC_API_KEY) y SUPABASE_SERVICE_ROLE_KEY en el proyecto del juego en Vercel."
+              : body.error === "clave_servicio_incorrecta"
+                ? "La variable SUPABASE_SERVICE_ROLE_KEY del proyecto del juego en Vercel no es la clave secreta de Supabase (service_role / sb_secret_…). Copiá la secreta, no la pública, y volvé a desplegar."
               : body.error === "sin_permiso"
                 ? "Esta cuenta no tiene permiso de administración."
                 : "No se pudo hablar con la IA. Probá de nuevo en un rato.";

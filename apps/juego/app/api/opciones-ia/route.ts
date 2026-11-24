@@ -31,6 +31,22 @@ function reply(body: unknown, status = 200) {
   return NextResponse.json(body, { status, headers: CORS });
 }
 
+/**
+ * La clave de servicio de Supabase tiene que ser la SECRETA (sb_secret_… o el JWT
+ * con rol service_role). Si se carga por error la pública/anon, Supabase la acepta
+ * pero las lecturas quedan filtradas por RLS y todo parece "vacío".
+ */
+function looksLikeServiceKey(key: string): boolean {
+  if (key.startsWith("sb_secret_")) return true;
+  if (key.startsWith("sb_publishable_")) return false;
+  try {
+    const payload = JSON.parse(Buffer.from(key.split(".")[1] ?? "", "base64url").toString("utf8")) as { role?: string };
+    return payload.role === "service_role";
+  } catch {
+    return false;
+  }
+}
+
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS });
 }
@@ -40,6 +56,10 @@ export async function POST(req: NextRequest) {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const provider = createProvider();
   if (!url || !serviceKey || !provider) return reply({ ok: false, error: "ia_no_configurada" }, 503);
+  if (!looksLikeServiceKey(serviceKey)) {
+    console.error("opciones-ia: SUPABASE_SERVICE_ROLE_KEY no es la clave secreta (service_role / sb_secret_…)");
+    return reply({ ok: false, error: "clave_servicio_incorrecta" }, 500);
+  }
 
   const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
   if (!token) return reply({ ok: false, error: "no_autenticado" }, 401);
