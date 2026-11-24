@@ -11,7 +11,8 @@ import { MAX_ANSWER_LENGTH, normalizeAnswer } from "@juego/shared";
 
 export const AI_MODEL = "claude-opus-5-5";
 /** Modelos de Gemini a probar, en orden (el primero que exista y responda). Configurable con GEMINI_MODEL. */
-const GEMINI_MODELS = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.6-flash"];
+// El más básico y barato primero; los otros sólo si ese está saturado o falla.
+const GEMINI_MODELS = ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.6-flash"];
 /** Errores pasajeros de Gemini: saturado o sin cupo en el momento. */
 const TRANSIENT = new Set([429, 500, 502, 503, 504]);
 /** Opciones falsas que se piden por respuesta (en el encuentro se usan 2 al azar). */
