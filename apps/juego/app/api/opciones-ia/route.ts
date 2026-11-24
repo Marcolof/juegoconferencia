@@ -4,7 +4,7 @@
 //   POST { modo: "pendientes" } → las que falten de todos (sólo administración, desde el panel).
 //
 // Siempre con el token de sesión de Supabase en Authorization: Bearer <token>.
-// Variables de entorno del servidor (nunca NEXT_PUBLIC_): ANTHROPIC_API_KEY y
+// Variables de entorno del servidor, definidas en Vercel (nunca NEXT_PUBLIC_): ANTHROPIC_API_KEY y
 // SUPABASE_SERVICE_ROLE_KEY. Sin ellas responde 503 y el juego sigue con la
 // regla anterior (respuestas de otros jugadores y listado de respaldo).
 
