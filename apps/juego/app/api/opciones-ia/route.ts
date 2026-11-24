@@ -32,8 +32,8 @@ function reply(body: unknown, status = 200) {
 }
 
 /**
- * La clave de servicio de Supabase tiene que ser la SECRETA (sb_secret_… o el JWT
- * con rol service_role). Si se carga por error la pública/anon, Supabase la acepta
+ * La clave de servicio de Supabase (SUPABASE_SERVICE_ROLE_KEY) tiene que ser la
+ * SECRETA (sb_secret_… o el JWT con rol service_role). Si se carga por error la pública/anon, Supabase la acepta
  * pero las lecturas quedan filtradas por RLS y todo parece "vacío".
  */
 function looksLikeServiceKey(key: string): boolean {
