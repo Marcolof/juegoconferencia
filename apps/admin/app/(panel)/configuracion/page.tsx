@@ -203,7 +203,7 @@ export default async function ConfiguracionPage({
               </span>
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium">Cantidad de preguntas que responde cada jugador</span>
+              <span className="text-sm font-medium">Mínimo de preguntas que responde cada jugador</span>
               <input
                 type="number"
                 name="min_answers"
@@ -214,9 +214,10 @@ export default async function ConfiguracionPage({
                 className={`${inputClass} w-32`}
               />
               <span className="text-xs text-muted">
-                Cada jugador elige libremente cuáles, pero tiene que responder exactamente esta cantidad: ni más ni
-                menos (R92). Si la cambiás, quienes ya respondieron con otra cantidad tendrán que editar sus
-                preguntas.
+                Cada jugador elige libremente cuáles y puede responder más, pero como mínimo esta cantidad. Si la
+                subís, quienes tengan menos verán un aviso para completar sus respuestas y no podrán jugar hasta
+                hacerlo, aunque el juego ya esté en curso. Las que ya respondieron no se cambian una vez que el
+                juego empezó.
               </span>
             </label>
             <label className="flex flex-col gap-1.5">

@@ -161,7 +161,8 @@ export async function startCompetitionNow() {
 
 /**
  * Resetea el puntaje de todos: borra todos los encuentros (y sus turnos, en
- * cascada). El ranking vuelve a cero y las respuestas dejan de estar fijas.
+ * cascada) y vuelve el juego a "aún no inició" (borra las fechas de inicio y
+ * de fin). El ranking vuelve a cero y las respuestas se pueden editar de nuevo.
  * Se conservan personas, fotos, respuestas y opciones de la IA.
  */
 export async function resetScores() {
@@ -169,7 +170,17 @@ export async function resetScores() {
   const path = "/ranking";
   const { error, count } = await db.from("encounters").delete({ count: "exact" }).not("id", "is", null);
   if (error) back(path, "error", "No se pudo resetear el puntaje.");
-  back(path, "ok", `Puntaje reseteado: se borraron ${count ?? 0} encuentros. El ranking volvió a cero.`);
+  // El juego vuelve a "aún no inició": sin fechas de inicio ni de fin.
+  const { error: e2 } = await db
+    .from("settings")
+    .update({ competition_start: null, competition_end: null, updated_at: new Date().toISOString() })
+    .eq("id", 1);
+  if (e2) back(path, "error", "Se borraron los encuentros, pero no se pudo volver el juego a «aún no inició».");
+  back(
+    path,
+    "ok",
+    `Puntaje reseteado: se borraron ${count ?? 0} encuentros. El ranking volvió a cero y el juego volvió a «aún no inició».`,
+  );
 }
 
 /** Termina el juego ya: pone la fecha de fin en este momento. */

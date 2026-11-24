@@ -54,7 +54,10 @@ export function ResetScoresButton() {
                 puntos de cada jugador: el ranking vuelve a cero.
               </p>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
-                <li>Las respuestas dejan de estar fijas: cada persona puede volver a editarlas hasta su próximo encuentro.</li>
+                <li>
+                  El juego vuelve a <strong className="text-ink">«aún no inició»</strong>: hay que volver a iniciarlo.
+                </li>
+                <li>Mientras no esté en curso, cada persona puede volver a editar sus respuestas.</li>
                 <li>Las parejas que ya jugaron pueden volver a jugar.</li>
                 <li>
                   <strong className="text-ink">No se borra</strong> ninguna cuenta, foto, respuesta ni opción de la IA.

@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { CircleHelp, ListChecks, LogOut, PencilLine, QrCode, ScanQrCode, TriangleAlert } from "lucide-react";
+import { CircleHelp, ListChecks, LogOut, PencilLine, QrCode, ScanQrCode } from "lucide-react";
 import { takePendingQr, usePlayer } from "@/lib/player";
 import { useActiveEncounterRedirect } from "@/lib/encounters";
 import { usePhotoUrls } from "@/lib/photos";
 import { useCompetition } from "@/lib/competition";
 import { CompetitionNotice } from "@/components/CompetitionNotice";
+import { CompleteAnswersModal } from "@/components/CompleteAnswersModal";
 import { Ranking } from "@/components/Ranking";
 import { Tour } from "@/components/Tour";
 import { Avatar, LinkButton, PlayerGate, Screen, signOutAndGo } from "@/components/ui";
@@ -94,18 +95,13 @@ export default function PrincipalPage() {
 
       <CompetitionNotice phase={comp.phase} paused={comp.paused} start={comp.start} end={comp.end} />
 
-      {/* Si se piden más respuestas que las que tiene (por ejemplo, el administrador subió la cantidad), avisa. */}
-      {Object.keys(state.answers).length < state.min_answers && (
-        <Link
-          href="/respuestas"
-          className="mb-3 flex items-center gap-3 rounded-2xl bg-bad-soft px-4 py-3 text-sm text-bad ring-1 ring-bad/30"
-        >
-          <TriangleAlert size={20} className="shrink-0" aria-hidden />
-          <span className="flex-1">
-            <strong>Te faltan {state.min_answers - Object.keys(state.answers).length} respuestas.</strong> Se piden{" "}
-            {state.min_answers} y vos tenés {Object.keys(state.answers).length}. Tocá acá para completarlas.
-          </span>
-        </Link>
+      {/* Si se piden más respuestas que las que tiene (el administrador subió el mínimo), hay que completarlas para participar. */}
+      {!state.answers_ready && (
+        <CompleteAnswersModal
+          have={Object.keys(state.answers).length}
+          min={state.min_answers}
+          missing={Math.max(state.min_answers - Object.keys(state.answers).length, 1)}
+        />
       )}
 
       {comp.canScan ? (

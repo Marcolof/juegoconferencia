@@ -144,10 +144,10 @@ export default async function PersonasPage({
                     <td className="px-4 py-3 tabular-nums">
                       {(() => {
                         const n = answered.get(p.id) ?? 0;
-                        return n === minAnswers ? (
+                        return n >= minAnswers ? (
                           n
                         ) : (
-                          <span className="text-bad" title={`Tiene que responder exactamente ${minAnswers}`}>
+                          <span className="text-bad" title={`Tiene que responder al menos ${minAnswers}`}>
                             {n} <span className="text-xs">de {minAnswers}</span>
                           </span>
                         );

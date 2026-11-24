@@ -56,7 +56,10 @@ export function usePlayer(gate: "auth" | "ready") {
         router.replace("/foto");
         return s;
       }
-      if (!s.answers_ready) {
+      // Quien nunca respondió va directo a elegir preguntas. Quien ya respondió pero
+      // le faltan (por ejemplo, subieron el mínimo) se queda y la pantalla principal
+      // le muestra un aviso para completarlas.
+      if (!s.answers_ready && Object.keys(s.answers).length === 0) {
         router.replace("/respuestas");
         return s;
       }

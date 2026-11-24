@@ -60,9 +60,9 @@ export default function RespuestasPage() {
   if (status !== "ok" || !state || !supabase) return <PlayerGate status={status} />;
 
   const locked = state.answers_locked;
-  // Cantidad exacta de preguntas que se responden (F38, R92): ni más ni menos.
+  // Mínimo de preguntas que se responden (F43): se puede responder más, nunca menos.
   const total = state.min_answers;
-  const exactChosen = chosen.length === total;
+  const exactChosen = chosen.length >= total;
   const allAnswered = chosen.every((q) => (values[String(q.id)] ?? "").trim().length > 0);
   const canGoHome = state.answers_ready;
   const savedCount = Object.keys(state.answers).length;
@@ -77,7 +77,7 @@ export default function RespuestasPage() {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(q.id)) next.delete(q.id);
-      else if (next.size < total) next.add(q.id); // al llegar al tope no se suman más
+      else next.add(q.id);
       return next;
     });
   }
@@ -119,7 +119,7 @@ export default function RespuestasPage() {
   if (locked && !completing) {
     return (
       <Screen title="Tus preguntas" back="/">
-        <Notice>Ya jugaste tu primer encuentro: tus respuestas quedaron fijas.</Notice>
+        <Notice>El juego está en curso y ya jugaste tu primer encuentro: tus respuestas quedaron fijas.</Notice>
         {savedList}
       </Screen>
     );
@@ -139,7 +139,7 @@ export default function RespuestasPage() {
       <Screen title="Tus preguntas" back="/">
         <p className="text-muted">
           Elegiste {savedCount} {savedCount === 1 ? "pregunta" : "preguntas"}. Otros jugadores van a tener que adivinar
-          tus respuestas charlando con vos. Podés cambiarlas hasta tu primer encuentro.
+          tus respuestas charlando con vos. Podés cambiarlas mientras el juego no esté en curso.
         </p>
         <div className="pb-28">{savedList}</div>
         <BottomBar>
@@ -158,17 +158,17 @@ export default function RespuestasPage() {
       <Screen title="Elegí tus preguntas" back={canGoHome ? "/" : undefined}>
         <p className="sticky top-0 z-10 -mx-4 mb-3 bg-canvas/95 px-4 py-2 text-center text-lg font-bold tabular-nums backdrop-blur" aria-hidden>
           <span className={exactChosen ? "text-ok" : "text-brand"}>{chosen.length}</span>
-          <span className="text-muted"> de {total}</span>
+          <span className="text-muted"> (mínimo {total})</span>
         </p>
         {savedCount > 0 && savedCount < total && (
           <Notice tone="error">
-            Ahora se piden {total} preguntas y vos respondiste {savedCount}. Completá {missingCount === 1 ? "la que falta" : `las ${missingCount} que faltan`}
+            Ahora se piden al menos {total} preguntas y vos respondiste {savedCount}. Completá {missingCount === 1 ? "la que falta" : `las ${missingCount} que faltan`}
             {completing ? ": las que ya respondiste no se pueden cambiar." : "."}
           </Notice>
         )}
         <p className="text-muted">
-          Elegí <strong className="text-ink">exactamente {total} preguntas</strong> para responder: otros jugadores van a
-          tener que adivinar tus respuestas charlando con vos.
+          Elegí <strong className="text-ink">al menos {total} preguntas</strong> para responder (podés elegir más):
+          otros jugadores van a tener que adivinar tus respuestas charlando con vos.
         </p>
 
         {!questions ? (
@@ -177,8 +177,7 @@ export default function RespuestasPage() {
           <ul className="mt-5 flex flex-col gap-2 pb-32">
             {questions.map((q) => {
               const on = selected.has(q.id);
-              // Con el cupo completo, las que no están marcadas quedan bloqueadas.
-              const blocked = !on && chosen.length >= total;
+              const blocked = false;
               // Si ya jugó, las que ya respondió quedan marcadas y no se pueden sacar.
               const kept = q.is_fixed || (locked && isSaved(q));
               return (
@@ -221,8 +220,8 @@ export default function RespuestasPage() {
             aria-live="polite"
           >
             {exactChosen
-              ? `${chosen.length} de ${total}: ¡listo!`
-              : `${chosen.length} de ${total} preguntas elegidas`}
+              ? `${chosen.length} elegidas: ¡listo!`
+              : `${chosen.length} elegidas: elegí ${total - chosen.length} más como mínimo`}
           </p>
           <Button type="button" disabled={!questions || !exactChosen} onClick={() => setStep("responder")}>
             Siguiente
@@ -246,7 +245,7 @@ export default function RespuestasPage() {
       <p className="text-muted">
         {locked
           ? "Contestá en pocas palabras las que faltan. Las que ya respondiste no se pueden cambiar."
-          : "Contestá en pocas palabras. Podés cambiarlas hasta tu primer encuentro."}
+          : "Contestá en pocas palabras. Podés cambiarlas mientras el juego no esté en curso."}
       </p>
 
       <form onSubmit={save} className="mt-6 flex flex-col gap-5 pb-28">

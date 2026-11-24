@@ -4,7 +4,7 @@ import { CalendarClock, Flag, PauseCircle } from "lucide-react";
 import { formatCompetitionDate, type CompetitionPhase } from "@juego/shared";
 
 /**
- * Estado del juego (R94, R96): «va a comenzar», «terminó» o «en pausa». No se
+ * Estado del juego (R94, R96): «aún no inició», «terminó» o «en pausa». No se
  * muestra mientras el juego está en curso y sin pausa: ahí se ven las opciones
  * para jugar.
  */
@@ -25,10 +25,10 @@ export function CompetitionNotice({
   let title = "";
   let detail = "";
   if (phase === "antes") {
-    title = "El juego va a comenzar";
+    title = "El juego aún no inició";
     detail = start
-      ? `Todavía no empezó. Arranca el ${formatCompetitionDate(start)} (hora de Argentina). Cuando empiece vas a ver acá las opciones para jugar. Mientras tanto, dejá lista tu cuenta y tus preguntas.`
-      : "Todavía no empezó: la organización lo va a lanzar en breve. Cuando empiece vas a ver acá las opciones para jugar. Mientras tanto, dejá lista tu cuenta y tus preguntas.";
+      ? `Va a empezar el ${formatCompetitionDate(start)} (hora de Argentina). Cuando empiece vas a ver acá las opciones para jugar. Mientras tanto, podés editar tus preguntas.`
+      : "La organización lo va a lanzar en breve. Cuando empiece vas a ver acá las opciones para jugar. Mientras tanto, podés editar tus preguntas.";
   } else if (phase === "terminada") {
     Icon = Flag;
     title = "El juego terminó";
