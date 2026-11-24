@@ -143,17 +143,24 @@ export async function setAnswerHidden(playerId: string, questionId: number, hidd
  * es libre siempre; escanear QR sólo se puede dentro de estas fechas. Las
  * fechas se cargan en hora de Argentina. Vacío = sin límite.
  */
-/** Lanza el juego ya: pone la fecha de inicio en este momento (F40, R96). */
+/**
+ * Lanza el juego ya: pone la fecha de inicio en este momento (F40, R96).
+ * Si el juego ya había terminado, lo reabre: borra la fecha de fin pasada y
+ * conserva los puntos (F44, R102). Una fecha de fin futura se respeta.
+ */
 export async function startCompetitionNow() {
   const { db } = await requireAdmin();
   const path = "/configuracion";
   const { data } = await db.from("settings").select("competition_end").eq("id", 1).single();
-  if (data?.competition_end && new Date(data.competition_end) <= new Date()) {
-    back(path, "error", "La fecha de fin ya pasó. Cambiala o borrala antes de iniciar el juego.");
-  }
+  const now = new Date();
+  const endPassed = !!data?.competition_end && new Date(data.competition_end) <= now;
   const { error } = await db
     .from("settings")
-    .update({ competition_start: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .update({
+      competition_start: now.toISOString(),
+      ...(endPassed ? { competition_end: null } : {}),
+      updated_at: now.toISOString(),
+    })
     .eq("id", 1);
   if (error) back(path, "error", "No se pudo iniciar el juego.");
   back(path, "ok", "¡El juego empezó! Los jugadores ya pueden escanear QR.");
@@ -163,13 +170,28 @@ export async function startCompetitionNow() {
  * Resetea el puntaje de todos: borra todos los encuentros (y sus turnos, en
  * cascada) y vuelve el juego a "aún no inició" (borra las fechas de inicio y
  * de fin). El ranking vuelve a cero y las respuestas se pueden editar de nuevo.
- * Se conservan personas, fotos, respuestas y opciones de la IA.
+ * Con «include_answers» también borra las respuestas de todos los jugadores y
+ * sus opciones de la IA: cada uno vuelve a elegir y responder (F44, R103).
+ * Siempre se conservan las cuentas y las fotos.
  */
-export async function resetScores() {
+export async function resetScores(form?: FormData) {
   const { db } = await requireAdmin();
   const path = "/ranking";
+  const withAnswers = form?.get("include_answers") === "on";
   const { error, count } = await db.from("encounters").delete({ count: "exact" }).not("id", "is", null);
   if (error) back(path, "error", "No se pudo resetear el puntaje.");
+  let answersDeleted = 0;
+  if (withAnswers) {
+    const { error: eAi } = await db.from("ai_distractors").delete().not("player_id", "is", null);
+    const { error: eAns, count: nAns } = await db
+      .from("answers")
+      .delete({ count: "exact" })
+      .not("player_id", "is", null);
+    if (eAi || eAns) {
+      back(path, "error", "Se borraron los encuentros, pero no se pudieron borrar las respuestas.");
+    }
+    answersDeleted = nAns ?? 0;
+  }
   // El juego vuelve a "aún no inició": sin fechas de inicio ni de fin.
   const { error: e2 } = await db
     .from("settings")
@@ -179,7 +201,9 @@ export async function resetScores() {
   back(
     path,
     "ok",
-    `Puntaje reseteado: se borraron ${count ?? 0} encuentros. El ranking volvió a cero y el juego volvió a «aún no inició».`,
+    withAnswers
+      ? `Puntaje y respuestas reseteados: se borraron ${count ?? 0} encuentros y ${answersDeleted} respuestas. Cada jugador vuelve a elegir y responder sus preguntas, y el juego volvió a «aún no inició».`
+      : `Puntaje reseteado: se borraron ${count ?? 0} encuentros. El ranking volvió a cero y el juego volvió a «aún no inició».`,
   );
 }
 

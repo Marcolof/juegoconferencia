@@ -5,15 +5,27 @@ import { RotateCcw, TriangleAlert, X } from "lucide-react";
 import { resetScores } from "@/app/(panel)/actions";
 
 /**
- * Botón para resetear el puntaje de todos los jugadores. Abre un modal que
- * explica qué se borra y qué se conserva antes de confirmar.
+ * Botón para resetear el juego. Abre un modal con dos opciones (F44, R103):
+ * - sólo el puntaje: borra los encuentros y conserva las respuestas;
+ * - puntaje y respuestas: además borra las respuestas de todos los jugadores
+ *   y sus opciones de la IA, para que cada uno vuelva a elegir y responder.
+ * Siempre explica qué se borra y qué se conserva antes de confirmar.
  */
 export function ResetScoresButton() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [busy, setBusy] = useState(false);
+  const [withAnswers, setWithAnswers] = useState(false);
 
-  const open = () => dialogRef.current?.showModal();
+  const open = () => {
+    setWithAnswers(false);
+    dialogRef.current?.showModal();
+  };
   const close = () => dialogRef.current?.close();
+
+  const optionClass = (on: boolean) =>
+    `flex cursor-pointer items-start gap-3 rounded-xl p-3 ring-1 transition ${
+      on ? "bg-bad-soft ring-bad" : "ring-line hover:bg-canvas"
+    }`;
 
   return (
     <>
@@ -23,21 +35,21 @@ export function ResetScoresButton() {
         className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-surface px-4 text-sm font-semibold text-bad ring-1 ring-line transition hover:bg-bad-soft"
       >
         <RotateCcw size={16} aria-hidden />
-        Resetear puntaje
+        Resetear
       </button>
 
       <dialog
         ref={dialogRef}
-        aria-labelledby="resetear-puntaje"
+        aria-labelledby="resetear"
         onClick={(e) => {
           if (e.target === dialogRef.current && !busy) close();
         }}
-        className="m-auto w-[min(30rem,calc(100vw-2rem))] rounded-2xl bg-surface p-0 text-ink shadow-xl backdrop:bg-black/50"
+        className="m-auto w-[min(32rem,calc(100vw-2rem))] rounded-2xl bg-surface p-0 text-ink shadow-xl backdrop:bg-black/50"
       >
         <form
-          action={async () => {
+          action={async (form) => {
             setBusy(true);
-            await resetScores();
+            await resetScores(form);
           }}
           className="p-6"
         >
@@ -46,23 +58,13 @@ export function ResetScoresButton() {
               <TriangleAlert size={20} aria-hidden />
             </span>
             <div className="flex-1">
-              <h2 id="resetear-puntaje" className="text-lg font-bold">
-                ¿Resetear el puntaje de todos?
+              <h2 id="resetear" className="text-lg font-bold">
+                ¿Qué querés resetear?
               </h2>
-              <p className="mt-2 text-sm text-muted">
-                <strong className="text-ink">No se puede deshacer.</strong> Se borran todos los encuentros jugados y los
-                puntos de cada jugador: el ranking vuelve a cero.
+              <p className="mt-1 text-sm text-muted">
+                <strong className="text-ink">No se puede deshacer.</strong> En los dos casos el juego vuelve a{" "}
+                <strong className="text-ink">«aún no inició»</strong> y hay que volver a iniciarlo.
               </p>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
-                <li>
-                  El juego vuelve a <strong className="text-ink">«aún no inició»</strong>: hay que volver a iniciarlo.
-                </li>
-                <li>Mientras no esté en curso, cada persona puede volver a editar sus respuestas.</li>
-                <li>Las parejas que ya jugaron pueden volver a jugar.</li>
-                <li>
-                  <strong className="text-ink">No se borra</strong> ninguna cuenta, foto, respuesta ni opción de la IA.
-                </li>
-              </ul>
             </div>
             <button
               type="button"
@@ -74,6 +76,47 @@ export function ResetScoresButton() {
               <X size={18} aria-hidden />
             </button>
           </div>
+
+          <fieldset className="mt-4 flex flex-col gap-2">
+            <legend className="sr-only">Qué resetear</legend>
+            <label className={optionClass(!withAnswers)}>
+              <input
+                type="radio"
+                name="scope"
+                checked={!withAnswers}
+                onChange={() => setWithAnswers(false)}
+                className="mt-1 size-4"
+              />
+              <span className="text-sm">
+                <span className="font-semibold">Sólo el puntaje</span>
+                <span className="mt-0.5 block text-muted">
+                  Borra los encuentros y los puntos: el ranking vuelve a cero y las parejas pueden volver a jugar. Las
+                  respuestas de cada jugador se conservan.
+                </span>
+              </span>
+            </label>
+            <label className={optionClass(withAnswers)}>
+              <input
+                type="radio"
+                name="scope"
+                checked={withAnswers}
+                onChange={() => setWithAnswers(true)}
+                className="mt-1 size-4"
+              />
+              <span className="text-sm">
+                <span className="font-semibold">Puntaje y respuestas</span>
+                <span className="mt-0.5 block text-muted">
+                  Además borra las respuestas de todos los jugadores y sus opciones de la IA. Cada uno vuelve a elegir y
+                  responder sus preguntas al entrar.
+                </span>
+              </span>
+            </label>
+            {withAnswers && <input type="hidden" name="include_answers" value="on" />}
+          </fieldset>
+
+          <p className="mt-3 text-xs text-muted">
+            <strong className="text-ink">No se borra</strong> ninguna cuenta ni foto.
+          </p>
 
           <div className="mt-6 flex justify-end gap-2">
             <button
@@ -90,7 +133,7 @@ export function ResetScoresButton() {
               className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-bad px-4 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
             >
               <RotateCcw size={16} aria-hidden />
-              {busy ? "Reseteando…" : "Sí, resetear"}
+              {busy ? "Reseteando…" : withAnswers ? "Sí, resetear puntaje y respuestas" : "Sí, resetear el puntaje"}
             </button>
           </div>
         </form>
