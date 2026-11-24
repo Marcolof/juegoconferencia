@@ -81,11 +81,18 @@ export async function POST(req: NextRequest) {
       const results = await Promise.allSettled(batch.map((id) => generateForPlayer(db, provider, id)));
       const failed = results.filter((r) => r.status === "rejected").length;
       const saved = results.reduce((n, r) => n + (r.status === "fulfilled" ? r.value.saved : 0), 0);
+      // El motivo del primer fallo (sólo lo ve el administrador): queda en el log y en el panel.
+      const firstError = results.find((r): r is PromiseRejectedResult => r.status === "rejected");
+      const detail = firstError
+        ? (firstError.reason instanceof Error ? firstError.reason.message : String(firstError.reason)).slice(0, 300)
+        : undefined;
+      if (detail) console.error(`opciones-ia: falló la generación de ${failed} jugadores:`, detail);
       return reply({
         ok: true,
         processed: batch.length,
         failed,
         saved,
+        detail,
         remaining: pending.length - (batch.length - failed),
       });
     }

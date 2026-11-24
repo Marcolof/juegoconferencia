@@ -41,6 +41,7 @@ export function AiOptionsButton({ pending }: { pending: number }) {
           remaining?: number;
           processed?: number;
           failed?: number;
+          detail?: string;
         };
         if (!res.ok || !body.ok) {
           const text =
@@ -55,9 +56,23 @@ export function AiOptionsButton({ pending }: { pending: number }) {
           return;
         }
         saved += body.saved ?? 0;
-        if (!body.remaining || body.processed === 0 || body.processed === body.failed) break;
+        // Si todos los jugadores del pedido fallaron, se corta y se muestra el motivo.
+        if (body.processed && body.processed === body.failed) {
+          setMsg({
+            tone: "error",
+            text: `La IA falló y no se generó nada${body.detail ? `. Motivo: ${body.detail}` : "."}`,
+          });
+          return;
+        }
+        if (!body.remaining || body.processed === 0) break;
       }
-      setMsg({ tone: "ok", text: `Listo: se generaron opciones para ${saved} respuestas.` });
+      setMsg({
+        tone: saved > 0 ? "ok" : "error",
+        text:
+          saved > 0
+            ? `Listo: se generaron opciones para ${saved} respuestas.`
+            : "No se generó ninguna opción. Revisá el log del juego en Vercel.",
+      });
     } catch {
       setMsg({ tone: "error", text: "No se pudo conectar con el juego. Revisá la conexión." });
     } finally {
