@@ -33,7 +33,9 @@ export default function RespuestasPage() {
     if (status !== "ok" || !supabase || !state) return;
     setValues(state.answers);
     // Con las respuestas ya guardadas arranca en el resumen; si no, en elegir.
-    setStep((s) => s ?? (state.answers_ready ? "resumen" : "elegir"));
+    // Si ya jugó pero ahora se piden más, va directo a elegir las que faltan.
+    const missing = Object.keys(state.answers).length < state.min_answers;
+    setStep((s) => s ?? (state.answers_ready && !(state.answers_locked && missing) ? "resumen" : "elegir"));
     supabase
       .from("questions")
       .select("id, position, text, is_fixed")
@@ -63,9 +65,15 @@ export default function RespuestasPage() {
   const exactChosen = chosen.length === total;
   const allAnswered = chosen.every((q) => (values[String(q.id)] ?? "").trim().length > 0);
   const canGoHome = state.answers_ready;
+  const savedCount = Object.keys(state.answers).length;
+  // Ya jugó, pero el administrador pidió más respuestas que las que tiene: puede sumar
+  // las que faltan, sin cambiar las que ya dio (las vieron otros jugadores).
+  const completing = locked && savedCount < total;
+  const missingCount = Math.max(total - savedCount, 0);
+  const isSaved = (q: Question) => state.answers[String(q.id)] !== undefined;
 
   function toggle(q: Question) {
-    if (q.is_fixed || locked) return;
+    if (q.is_fixed || (locked && isSaved(q))) return;
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(q.id)) next.delete(q.id);
@@ -106,10 +114,9 @@ export default function RespuestasPage() {
         ))}
     </dl>
   );
-  const savedCount = Object.keys(state.answers).length;
 
   // ---------- Respuestas ya fijas: sólo lectura ----------
-  if (locked) {
+  if (locked && !completing) {
     return (
       <Screen title="Tus preguntas" back="/">
         <Notice>Ya jugaste tu primer encuentro: tus respuestas quedaron fijas.</Notice>
@@ -153,6 +160,12 @@ export default function RespuestasPage() {
           <span className={exactChosen ? "text-ok" : "text-brand"}>{chosen.length}</span>
           <span className="text-muted"> de {total}</span>
         </p>
+        {savedCount > 0 && savedCount < total && (
+          <Notice tone="error">
+            Ahora se piden {total} preguntas y vos respondiste {savedCount}. Completá {missingCount === 1 ? "la que falta" : `las ${missingCount} que faltan`}
+            {completing ? ": las que ya respondiste no se pueden cambiar." : "."}
+          </Notice>
+        )}
         <p className="text-muted">
           Elegí <strong className="text-ink">exactamente {total} preguntas</strong> para responder: otros jugadores van a
           tener que adivinar tus respuestas charlando con vos.
@@ -166,17 +179,19 @@ export default function RespuestasPage() {
               const on = selected.has(q.id);
               // Con el cupo completo, las que no están marcadas quedan bloqueadas.
               const blocked = !on && chosen.length >= total;
+              // Si ya jugó, las que ya respondió quedan marcadas y no se pueden sacar.
+              const kept = q.is_fixed || (locked && isSaved(q));
               return (
                 <li key={q.id}>
                   <button
                     type="button"
                     role="checkbox"
                     aria-checked={on}
-                    aria-disabled={q.is_fixed || blocked}
+                    aria-disabled={kept || blocked}
                     onClick={() => toggle(q)}
                     className={`flex min-h-14 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition ${
                       on ? "bg-brand-soft ring-2 ring-brand" : "bg-surface ring-1 ring-line"
-                    } ${q.is_fixed ? "cursor-default" : blocked ? "cursor-not-allowed opacity-45" : "active:scale-[0.99]"}`}
+                    } ${kept ? "cursor-default" : blocked ? "cursor-not-allowed opacity-45" : "active:scale-[0.99]"}`}
                   >
                     <span
                       aria-hidden
@@ -188,6 +203,9 @@ export default function RespuestasPage() {
                     </span>
                     <span className="flex-1 text-base">{q.text}</span>
                     {q.is_fixed && <span className="shrink-0 text-xs font-medium text-muted">obligatoria</span>}
+                    {!q.is_fixed && locked && isSaved(q) && (
+                      <span className="shrink-0 text-xs font-medium text-muted">ya respondida</span>
+                    )}
                   </button>
                 </li>
               );
@@ -226,7 +244,9 @@ export default function RespuestasPage() {
         Cambiar las preguntas
       </button>
       <p className="text-muted">
-        Contestá en pocas palabras. Podés cambiarlas hasta tu primer encuentro.
+        {locked
+          ? "Contestá en pocas palabras las que faltan. Las que ya respondiste no se pueden cambiar."
+          : "Contestá en pocas palabras. Podés cambiarlas hasta tu primer encuentro."}
       </p>
 
       <form onSubmit={save} className="mt-6 flex flex-col gap-5 pb-28">
@@ -242,6 +262,7 @@ export default function RespuestasPage() {
                 className="min-h-12 rounded-xl border border-line bg-surface px-4 text-base outline-none focus:border-brand"
                 maxLength={MAX_ANSWER_LENGTH}
                 required
+                readOnly={locked && isSaved(q)}
                 value={value}
                 onChange={(e) => setValues((v) => ({ ...v, [id]: e.target.value }))}
               />

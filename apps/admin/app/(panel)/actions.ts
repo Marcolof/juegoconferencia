@@ -159,6 +159,19 @@ export async function startCompetitionNow() {
   back(path, "ok", "¡El juego empezó! Los jugadores ya pueden escanear QR.");
 }
 
+/**
+ * Resetea el puntaje de todos: borra todos los encuentros (y sus turnos, en
+ * cascada). El ranking vuelve a cero y las respuestas dejan de estar fijas.
+ * Se conservan personas, fotos, respuestas y opciones de la IA.
+ */
+export async function resetScores() {
+  const { db } = await requireAdmin();
+  const path = "/ranking";
+  const { error, count } = await db.from("encounters").delete({ count: "exact" }).not("id", "is", null);
+  if (error) back(path, "error", "No se pudo resetear el puntaje.");
+  back(path, "ok", `Puntaje reseteado: se borraron ${count ?? 0} encuentros. El ranking volvió a cero.`);
+}
+
 /** Termina el juego ya: pone la fecha de fin en este momento. */
 export async function endCompetitionNow() {
   const { db } = await requireAdmin();
