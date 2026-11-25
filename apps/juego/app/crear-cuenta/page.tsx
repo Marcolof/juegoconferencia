@@ -10,6 +10,7 @@ import {
   type PublicSettings,
 } from "@juego/shared";
 import { getSupabase } from "@/lib/supabase";
+import { GoogleSignIn } from "@/components/GoogleSignIn";
 import { Button, Field, Notice, PlayerGate, Screen } from "@/components/ui";
 
 export default function CrearCuentaPage() {
@@ -72,6 +73,9 @@ export default function CrearCuentaPage() {
 
   return (
     <Screen title="Crear cuenta" back="/ingresar">
+      <div className="mb-4">
+        <GoogleSignIn />
+      </div>
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <Field
           label="Email corporativo"

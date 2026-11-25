@@ -65,6 +65,11 @@ export default function EncuentroPage() {
       return;
     }
     const expires = new Date(view.expires_at).getTime();
+    if (view.paused) {
+      // En pausa el reloj está congelado (R110): se muestra el tiempo que queda, quieto.
+      setRemaining(Math.max(0, Math.round((expires - new Date(view.now).getTime()) / 1000)));
+      return;
+    }
     const tick = () => {
       const left = Math.max(0, Math.round((expires - (Date.now() + offsetRef.current)) / 1000));
       setRemaining(left);
@@ -97,6 +102,11 @@ export default function EncuentroPage() {
 
   const other = view.other;
   const otherName = `${other.first_name} ${other.last_name}`;
+  const pausedNotice = view.paused && !final && (
+    <div className="mb-4">
+      <Notice>El juego está en pausa: el reloj se detuvo. Cuando la organización lo reanude, siguen donde estaban.</Notice>
+    </div>
+  );
   const turn = view.my_turn;
   const myTurnNow = !!turn && !final;
 
@@ -159,6 +169,7 @@ export default function EncuentroPage() {
     const results = view.results;
     const mine = results.filter((r) => r.is_correct).length;
     const theirs = view.other_correct ?? 0;
+    const shared = mine + theirs; // puntaje compartido (R109)
     return (
       <Screen title="Resultado">
         {header}
@@ -167,7 +178,12 @@ export default function EncuentroPage() {
           <ResultCard label={other.first_name} correct={theirs} total={view.other_total} />
         </div>
         <p className="mt-5 text-center text-lg font-bold">
-          {mine > 0 ? `¡Sumaste ${mine} ${mine === 1 ? "punto" : "puntos"}!` : "Esta vez no sumaste."}
+          {shared > 0
+            ? `¡Suman ${shared} ${shared === 1 ? "punto" : "puntos"} cada uno!`
+            : "Esta vez no sumaron."}
+        </p>
+        <p className="mt-1 text-center text-sm text-muted">
+          Los dos se llevan los aciertos de los dos: vos {mine} y {other.first_name} {theirs}.
         </p>
 
         <h2 className="mb-2 mt-6 text-sm font-semibold text-muted">Tus preguntas sobre {other.first_name}</h2>
@@ -214,6 +230,7 @@ export default function EncuentroPage() {
     return (
       <Screen title="Tu turno">
         {header}
+        {pausedNotice}
         <div className="mb-3">
           <div className="mb-1.5 flex items-center justify-between text-sm">
             <span className="font-semibold tabular-nums">
@@ -256,7 +273,7 @@ export default function EncuentroPage() {
             <Notice tone="error">{error}</Notice>
           </div>
         )}
-        <Button className="mt-6" onClick={confirm} disabled={choice === null || busy}>
+        <Button className="mt-6" onClick={confirm} disabled={choice === null || busy || !!view.paused}>
           {busy ? "Enviando…" : turn.number >= view.total ? "Confirmar y terminar" : "Confirmar y seguir"}
         </Button>
       </Screen>
@@ -268,13 +285,14 @@ export default function EncuentroPage() {
     (view.i_am === "a" && view.status === "turno_b") || (view.i_am === "b" && view.status === "turno_a");
   const waitingText = theyAnswering
     ? view.i_am === "b" && view.status === "turno_a"
-      ? `${other.first_name} está adivinando tus respuestas. ¡Charlen! Después te toca a vos.`
+      ? `${other.first_name} tiene que responder tus preguntas. Charlen y después te toca a vos.`
       : `Ahora ${other.first_name} adivina tus respuestas. Los puntos aparecen cuando termine.`
     : `Esperando a ${other.first_name}…`;
 
   return (
     <Screen title="Esperando">
       {header}
+      {pausedNotice}
       <div className="flex flex-col items-center gap-4 py-10 text-center">
         <span className="size-10 animate-spin rounded-full border-4 border-brand-soft border-t-brand" />
         <p className="text-lg">{waitingText}</p>

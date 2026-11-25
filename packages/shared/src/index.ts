@@ -82,6 +82,8 @@ export interface PublicSettings {
   questions_per_encounter: number;
   competition_start: string | null;
   competition_end: string | null;
+  /** Se muestra el botón «Ingresar con Google» (R111). */
+  google_login: boolean;
 }
 
 /** Fases de la competencia (R94). */
@@ -215,6 +217,8 @@ export interface EncounterTurnResult {
 /** Lo que el servidor le muestra a cada jugador de su encuentro. */
 export interface EncounterView {
   id: string;
+  /** El juego está en pausa: nadie responde y el reloj está congelado (R110). */
+  paused?: boolean;
   status: EncounterStatus;
   i_am: "a" | "b";
   expires_at: string;
@@ -240,7 +244,10 @@ export function gameErrorMessage(raw: string | undefined | null): string {
   const map: Record<string, string> = {
     no_autenticado: "Tenés que ingresar de nuevo.",
     cuenta_suspendida: "Tu cuenta está suspendida. Hablá con la organización.",
-    juego_cerrado: "Los encuentros están en pausa en este momento.",
+    juego_cerrado: "El juego está en pausa. Esperá a que la organización lo reanude.",
+    juego_en_pausa: "El juego está en pausa. Esperá a que la organización lo reanude.",
+    estas_jugando: "Ya estás en un encuentro: terminalo antes de escanear a otra persona.",
+    otro_jugando: "Esa persona está jugando con alguien más. Probá en unos minutos.",
     competencia_no_empezo: "La competencia todavía no empezó.",
     competencia_terminada: "La competencia terminó: ya no se pueden escanear más QR.",
     faltan_respuestas: "Primero completá tus preguntas: te faltan para llegar al mínimo.",

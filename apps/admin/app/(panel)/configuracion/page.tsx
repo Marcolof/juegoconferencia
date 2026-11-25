@@ -1,6 +1,7 @@
 import { competitionPhase, formatCompetitionDate, toCompetitionInput } from "@juego/shared";
 import { requireAdmin } from "@/lib/supabase-server";
 import { GameToggleButton } from "@/components/GameToggleButton";
+import { PauseButton } from "@/components/PauseButton";
 import { addAdminEmail, removeAdminEmail, updateCompetition, updateSettings } from "../actions";
 import { Card, Flash, PageTitle, buttonClass, inputClass, secondaryButtonClass } from "@/components/ui";
 
@@ -17,7 +18,7 @@ export default async function ConfiguracionPage({
     db
       .from("settings")
       .select(
-        "email_domain, encounter_minutes, game_open, min_answers, questions_per_encounter, competition_start, competition_end",
+        "email_domain, encounter_minutes, game_open, google_login, min_answers, questions_per_encounter, competition_start, competition_end",
       )
       .eq("id", 1)
       .single(),
@@ -61,6 +62,7 @@ export default async function ConfiguracionPage({
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <GameToggleButton running={phase === "en_curso"} />
+          {phase === "en_curso" && <PauseButton paused={!(s?.game_open ?? true)} />}
         </div>
         <form action={updateCompetition} className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end">
           <label className="flex flex-1 flex-col gap-1.5">
@@ -98,12 +100,12 @@ export default async function ConfiguracionPage({
           <h2 className="font-bold">Juego</h2>
           <form action={updateSettings} className="mt-4 flex flex-col gap-4">
             <label className="flex items-center gap-3">
-              <input type="checkbox" name="game_open" defaultChecked={s?.game_open ?? true} className="size-5" />
+              <input type="checkbox" name="google_login" defaultChecked={s?.google_login ?? false} className="size-5" />
               <span>
-                <span className="font-medium">Encuentros abiertos (pausa manual)</span>
+                <span className="font-medium">Ingreso con Google</span>
                 <span className="block text-sm text-muted">
-                  Si lo apagás, nadie puede empezar un encuentro hasta que lo vuelvas a prender, aunque la competencia
-                  esté en curso.
+                  Muestra «Ingresar con Google» en la web de los jugadores. Prendelo recién cuando Google esté configurado
+                  en Supabase (R111).
                 </span>
               </span>
             </label>

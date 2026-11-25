@@ -207,6 +207,24 @@ export async function resetScores(form?: FormData) {
   );
 }
 
+/**
+ * Pausa o reanuda el juego (F47, R110). En pausa nadie empieza ni responde y el
+ * reloj de los encuentros se congela; al reanudar recuperan el tiempo.
+ */
+export async function setGamePaused(paused: boolean) {
+  const { db } = await requireAdmin();
+  const path = "/configuracion";
+  const { error } = await db.rpc("set_game_paused", { p_paused: paused });
+  if (error) back(path, "error", paused ? "No se pudo pausar el juego." : "No se pudo reanudar el juego.");
+  back(
+    path,
+    "ok",
+    paused
+      ? "Juego en pausa: nadie puede empezar encuentros ni responder, y el reloj está detenido."
+      : "Juego reanudado: los encuentros siguen con el tiempo que les quedaba.",
+  );
+}
+
 /** Termina el juego ya: pone la fecha de fin en este momento. */
 export async function endCompetitionNow() {
   const { db } = await requireAdmin();
@@ -255,7 +273,7 @@ export async function updateSettings(form: FormData) {
   const minutes = Number(text(form, "encounter_minutes"));
   const minAnswers = Number(text(form, "min_answers"));
   const perEncounter = Number(text(form, "questions_per_encounter"));
-  const gameOpen = form.get("game_open") === "on";
+  const googleLogin = form.get("google_login") === "on";
   if (!Number.isInteger(minutes) || minutes < 1 || minutes > 60) {
     back(path, "error", "La duración tiene que ser un número entero entre 1 y 60.");
   }
@@ -279,7 +297,7 @@ export async function updateSettings(form: FormData) {
       encounter_minutes: minutes,
       min_answers: minAnswers,
       questions_per_encounter: perEncounter,
-      game_open: gameOpen,
+      google_login: googleLogin,
       updated_at: new Date().toISOString(),
     })
     .eq("id", 1);

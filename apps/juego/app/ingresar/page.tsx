@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { gameErrorMessage } from "@juego/shared";
 import { getSupabase } from "@/lib/supabase";
+import { GoogleSignIn } from "@/components/GoogleSignIn";
 import { Button, Field, Notice, PlayerGate, Screen } from "@/components/ui";
 
 export default function IngresarPage() {
@@ -44,6 +45,9 @@ export default function IngresarPage() {
         </p>
       </div>
 
+      <div className="mb-4">
+        <GoogleSignIn />
+      </div>
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <Field
           label="Email corporativo"
