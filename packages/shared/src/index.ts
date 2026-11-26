@@ -8,11 +8,8 @@ export const MAX_ANSWER_LENGTH = 30;
 /** Largo mínimo de la contraseña (R76). Coincide con el mínimo de Supabase. */
 export const MIN_PASSWORD_LENGTH = 6;
 
-/** Puestos del ranking que se ven en la pantalla principal (F35, R85). */
-export const PLAYER_RANKING_TOP = 8;
-
-/** Jugadores por página en el ranking completo (F35, R86). */
-export const RANKING_PAGE_SIZE = 20;
+/** Jugadores por página en la pestaña «Jugadores» del juego (F49). */
+export const PLAYERS_PAGE_SIZE = 20;
 
 /** Nombre del bucket de Storage donde van las fotos. */
 export const PHOTOS_BUCKET = "fotos";
@@ -47,7 +44,10 @@ export function emailMatchesDomain(email: string, domain: string | null): boolea
   return email.trim().toLowerCase().endsWith("@" + domain.trim().toLowerCase());
 }
 
-export interface RankingRow {
+/** Una fila del ranking del panel (get_admin_ranking, F49). */
+export interface StandingRow {
+  /** Orden exacto: desempata por quien llegó primero al puntaje (P77). */
+  ord: number;
   /** Puesto: mismo puntaje = mismo puesto (P77). */
   place: number;
   player_id: string;
@@ -55,18 +55,42 @@ export interface RankingRow {
   last_name: string;
   photo_path: string | null;
   points: number;
+  /** Encuentros completos. */
+  encounters: number;
 }
 
-export interface MyRanking {
-  place: number | null;
+/** Cómo muestra el panel el ranking (F49). */
+export type RankingMode = "participantes" | "grupos" | "ranking";
+
+/**
+ * Grupos del modo «por grupos» (F49): por orden en el ranking, sin mostrar
+ * el puesto exacto. Quien todavía no sumó puntos va aparte.
+ */
+export const RANKING_GROUPS = [
+  { id: "top10", label: "Top 10", detail: "Puestos 1 a 10", from: 1, to: 10 },
+  { id: "top20", label: "Top 20", detail: "Puestos 11 a 20", from: 11, to: 20 },
+  { id: "top50", label: "Top 50", detail: "Puestos 21 a 50", from: 21, to: 50 },
+  { id: "resto", label: "Resto", detail: "Del puesto 51 en adelante", from: 51, to: Number.POSITIVE_INFINITY },
+] as const;
+
+/** Progreso propio del jugador, sin puesto (get_my_progress, F49). */
+export interface MyProgress {
+  encounters: number;
   points: number;
-  total_players: number;
+  /** Sólo si sumó puntos y hay más jugadores que el tramo. */
+  tier: "top10" | "top50" | null;
 }
 
-/** Una página del ranking completo, con búsqueda por nombre (R86). */
-export interface RankingPage {
-  rows: RankingRow[];
-  /** Total de jugadores que coinciden con la búsqueda. */
+/** Un jugador en la pestaña «Jugadores»: sin puntaje (F49). */
+export interface PlayerListItem {
+  player_id: string;
+  first_name: string;
+  last_name: string;
+  photo_path: string | null;
+}
+
+export interface PlayersPage {
+  rows: PlayerListItem[];
   total: number;
   page: number;
   page_size: number;

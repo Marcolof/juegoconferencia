@@ -33,8 +33,8 @@ export function CompetitionNotice({
     Icon = Flag;
     title = "El juego terminó";
     detail = end
-      ? `Terminó el ${formatCompetitionDate(end)}. Ya no se pueden escanear más QR; el ranking queda como está.`
-      : "Ya no se pueden escanear más QR; el ranking queda como está.";
+      ? `Terminó el ${formatCompetitionDate(end)}. Ya no se pueden escanear más QR; los puntos quedan como están.`
+      : "Ya no se pueden escanear más QR; los puntos quedan como están.";
   } else {
     Icon = PauseCircle;
     title = "Los encuentros están en pausa";

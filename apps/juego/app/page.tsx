@@ -10,7 +10,7 @@ import { usePhotoUrls } from "@/lib/photos";
 import { useCompetition } from "@/lib/competition";
 import { CompetitionNotice } from "@/components/CompetitionNotice";
 import { CompleteAnswersModal } from "@/components/CompleteAnswersModal";
-import { Ranking } from "@/components/Ranking";
+import { HomeTabs } from "@/components/HomeTabs";
 import { Tour } from "@/components/Tour";
 import { pressableClass } from "@juego/shared/ui";
 import { Avatar, LinkButton, PlayerGate, Screen, signOutAndGo } from "@/components/ui";
@@ -130,7 +130,7 @@ export default function PrincipalPage() {
         </div>
       )}
 
-      {/* Accesos secundarios arriba del ranking, para que no queden fuera de la vista (F35). */}
+      {/* Accesos secundarios arriba de las pestañas, para que no queden fuera de la vista (F35). */}
       <nav aria-label="Más opciones" className="mb-5 mt-3 grid grid-cols-2 gap-3">
         <Link href="/respuestas" className={chip}>
           {state.answers_locked ? (
@@ -146,7 +146,8 @@ export default function PrincipalPage() {
         </button>
       </nav>
 
-      <Ranking supabase={supabase} playerId={state.id} />
+      {/* En vez del ranking: «Mi progreso» (sin puesto) y «Jugadores» (F49). */}
+      <HomeTabs supabase={supabase} playerId={state.id} />
 
       <Tour open={tourOpen} onClose={onTourClose} />
     </Screen>

@@ -81,7 +81,7 @@ export default function FotoPage() {
   return (
     <Screen title="Tu foto" back={state.photo_step_done ? "/" : undefined}>
       <p className="text-muted">
-        Así te reconocen en el ranking y en los encuentros. Si preferís, pasá sin foto: se van a ver tus
+        Así te reconocen en la lista de jugadores y en los encuentros. Si preferís, pasá sin foto: se van a ver tus
         iniciales.
       </p>
 

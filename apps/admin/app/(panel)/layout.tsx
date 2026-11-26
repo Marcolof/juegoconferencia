@@ -1,14 +1,6 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/supabase-server";
 import { SignOut } from "@/components/SignOut";
-
-const NAV = [
-  { href: "/", label: "Resumen" },
-  { href: "/personas", label: "Personas" },
-  { href: "/ranking", label: "Ranking" },
-  { href: "/respuestas", label: "Respuestas" },
-  { href: "/configuracion", label: "Configuración" },
-];
+import { NavLinks } from "@/components/NavLinks";
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const admin = await requireAdmin();
@@ -19,17 +11,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
           <span className="font-bold">
             Juego · <span className="text-brand">Administración</span>
           </span>
-          <nav aria-label="Secciones" className="flex flex-1 flex-wrap gap-1">
-            {NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-brand-soft"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <NavLinks />
           <span className="hidden text-sm text-muted md:inline">{admin.email}</span>
           <SignOut />
         </div>

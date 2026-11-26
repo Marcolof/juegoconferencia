@@ -24,8 +24,8 @@ const STEPS: readonly { icon: LucideIcon; title: string; text: string }[] = [
   },
   {
     icon: Trophy,
-    title: "Mirá el ranking",
-    text: "Abajo ves el ranking con tu puesto y, con «Ver ranking completo», a todos los jugadores. Tus respuestas las podés cambiar con «Mis respuestas» hasta tu primer encuentro.",
+    title: "Mirá tu progreso",
+    text: "Abajo, en «Mi progreso», ves tus encuentros y tus puntos; en «Jugadores», a todas las personas que participan. Tus respuestas las podés cambiar con «Mis respuestas» mientras el juego no esté en curso.",
   },
 ];
 

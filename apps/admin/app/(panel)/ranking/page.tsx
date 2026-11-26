@@ -17,7 +17,7 @@ export default async function RankingPage({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageTitle
           title="Ranking en vivo"
-          subtitle="Mismo puntaje, mismo puesto; queda más arriba quien llegó primero (P77). Las cuentas suspendidas no aparecen."
+          subtitle="Elegí cómo mostrarlo: participantes al azar, por grupos o el ranking con puntaje. Las cuentas suspendidas no aparecen."
         />
         <ResetScoresButton />
       </div>
