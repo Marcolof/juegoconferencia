@@ -97,6 +97,15 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Modo "mias": sólo jugadores activos, con un límite amplio por persona (migración 16).
+    // Si se pasa del límite, sus respuestas usan las opciones de siempre y el panel
+    // puede completarlas después con «Generar las que faltan», que no tiene límite.
+    const { data: me } = await db.from("profiles").select("role, status").eq("id", user.id).maybeSingle();
+    if (me?.role !== "jugador" || me?.status !== "activo") return reply({ ok: false, error: "sin_permiso" }, 403);
+    const { data: allowed, error: slotError } = await db.rpc("take_ai_slot", { p_player: user.id });
+    if (slotError) throw new Error(`límite de IA: ${slotError.message}`);
+    if (allowed !== true) return reply({ ok: false, error: "demasiados_pedidos" }, 429);
+
     const result = await generateForPlayer(db, provider, user.id);
     return reply({ ok: true, ...result });
   } catch (err) {

@@ -49,8 +49,12 @@ export function usePhotoUrls(paths: (string | null | undefined)[]) {
   return urls;
 }
 
-/** Achica la foto a 512 px de lado y la pasa a JPEG antes de subirla. */
-export async function resizeImage(file: File, max = 512): Promise<Blob> {
+/**
+ * Achica la foto a 320 px de lado y la pasa a JPEG liviano antes de subirla
+ * (reporte 19: lo mínimo que se sigue viendo bien en los avatares y en la
+ * pantalla grande). Si aun así pasa de 60 KB, la vuelve a comprimir más.
+ */
+export async function resizeImage(file: File, max = 320): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
   const w = Math.round(bitmap.width * scale);
@@ -62,7 +66,10 @@ export async function resizeImage(file: File, max = 512): Promise<Blob> {
   if (!ctx) throw new Error("sin canvas");
   ctx.drawImage(bitmap, 0, 0, w, h);
   bitmap.close();
-  return await new Promise<Blob>((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("sin imagen"))), "image/jpeg", 0.85),
-  );
+  const encode = (quality: number) =>
+    new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("sin imagen"))), "image/jpeg", quality),
+    );
+  const blob = await encode(0.7);
+  return blob.size > 60_000 ? await encode(0.5) : blob;
 }
