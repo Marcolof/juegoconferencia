@@ -2,11 +2,11 @@
 /* Los componentes compartidos (paginador) también usan clases de Tailwind. */
 @source "../../../packages/shared/src";
 
-/* Marca provisoria: no hay lineamientos de Vortex todavía (P16). */
+/* Violeta del logo de Vortex Meet (F50); el resto de la paleta sigue siendo provisoria (P16). */
 @theme {
-  --color-brand: #5b3df5;
-  --color-brand-strong: #4527d6;
-  --color-brand-soft: #ece8ff;
+  --color-brand: #6a3ac7;
+  --color-brand-strong: #5730a3;
+  --color-brand-soft: #efebf9;
   --color-ink: #17142b;
   --color-muted: #6b6785;
   --color-line: #e3e0f0;
