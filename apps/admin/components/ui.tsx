@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { buttonClass as sharedButtonClass, type ButtonStyleOptions } from "@juego/shared/ui";
-import { initials } from "@juego/shared";
+import { APP_NAME, LOGO_SRC, initials } from "@juego/shared";
 
 export function PageTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
@@ -84,4 +84,10 @@ export function LinkButton({
       {children}
     </Link>
   );
+}
+
+/** Logo de Vortex Meet (F50). El texto alternativo es el nombre del producto. */
+export function Logo({ className = "" }: { className?: string }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={LOGO_SRC} alt={APP_NAME} width={2731} height={966} className={className} />;
 }

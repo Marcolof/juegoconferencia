@@ -6,7 +6,7 @@ import { useState } from "react";
 import { gameErrorMessage } from "@juego/shared";
 import { getSupabase } from "@/lib/supabase";
 import { GoogleSignIn } from "@/components/GoogleSignIn";
-import { Button, Field, Notice, PlayerGate, Screen } from "@/components/ui";
+import { Button, Field, Logo, Notice, PlayerGate, Screen } from "@/components/ui";
 
 export default function IngresarPage() {
   const router = useRouter();
@@ -38,8 +38,9 @@ export default function IngresarPage() {
   return (
     <Screen>
       <div className="mb-8 mt-6">
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand">Convención Vortex</p>
-        <h1 className="mt-1 text-3xl font-extrabold leading-tight">Juego de la convención</h1>
+        <h1>
+          <Logo className="h-16 w-auto" />
+        </h1>
         <p className="mt-3 text-muted">
           Escaneá el QR de alguien, charlen y descubran algo del otro. Suma quien acierta.
         </p>

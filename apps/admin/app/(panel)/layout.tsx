@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/supabase-server";
 import { SignOut } from "@/components/SignOut";
 import { NavLinks } from "@/components/NavLinks";
+import { Logo } from "@/components/ui";
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const admin = await requireAdmin();
@@ -8,8 +9,9 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     <div className="min-h-dvh">
       <header className="sticky top-0 z-10 border-b border-line bg-surface/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-          <span className="font-bold">
-            Juego · <span className="text-brand">Administración</span>
+          <span className="flex items-center gap-2 font-bold">
+            <Logo className="h-7 w-auto" />
+            <span className="text-brand">Administración</span>
           </span>
           <NavLinks />
           <span className="hidden text-sm text-muted md:inline">{admin.email}</span>

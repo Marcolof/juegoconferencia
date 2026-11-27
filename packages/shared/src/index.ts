@@ -2,6 +2,12 @@
 // Las reglas que importan para el puntaje también se validan en la base
 // (supabase/migrations); estas copias sirven para avisar antes en pantalla.
 
+/** Nombre del producto en los textos de las dos apps (F50). La URL puede seguir diciendo "juegoconferencia". */
+export const APP_NAME = "Vortex Meet";
+
+/** Logo (wordmark). Cada app lo sirve desde su carpeta public/. */
+export const LOGO_SRC = "/vortex-meet-logo.svg";
+
 /** Largo máximo de cada respuesta escrita (R70). */
 export const MAX_ANSWER_LENGTH = 30;
 

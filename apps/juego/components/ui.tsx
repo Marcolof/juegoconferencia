@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { buttonClass, type ButtonSize } from "@juego/shared/ui";
 import { ArrowLeft } from "lucide-react";
-import { initials } from "@juego/shared";
+import { APP_NAME, LOGO_SRC, initials } from "@juego/shared";
 import type { PlayerStatus } from "@/lib/player";
 import { getSupabase } from "@/lib/supabase";
 
@@ -201,4 +201,10 @@ export function PlayerGate({ status }: { status: PlayerStatus }) {
 export async function signOutAndGo() {
   await getSupabase()?.auth.signOut();
   window.location.href = "/ingresar";
+}
+
+/** Logo de Vortex Meet (F50). El texto alternativo es el nombre del producto. */
+export function Logo({ className = "" }: { className?: string }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={LOGO_SRC} alt={APP_NAME} width={2731} height={966} className={className} />;
 }

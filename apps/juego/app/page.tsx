@@ -13,7 +13,7 @@ import { CompleteAnswersModal } from "@/components/CompleteAnswersModal";
 import { HomeTabs } from "@/components/HomeTabs";
 import { Tour } from "@/components/Tour";
 import { pressableClass } from "@juego/shared/ui";
-import { Avatar, LinkButton, PlayerGate, Screen, signOutAndGo } from "@/components/ui";
+import { Avatar, LinkButton, Logo, PlayerGate, Screen, signOutAndGo } from "@/components/ui";
 
 // Recuerda en la sesión que el tour ya se vio, por si la base tarda en guardarlo.
 const TOUR_SEEN_KEY = "juego:tour-visto";
@@ -72,6 +72,7 @@ export default function PrincipalPage() {
 
   return (
     <Screen>
+      <Logo className="mb-4 h-8 w-auto self-start" />
       <header className="mb-5 flex items-center gap-3">
         <Link href="/foto" aria-label="Cambiar foto">
           <Avatar

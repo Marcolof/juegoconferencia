@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import { APP_NAME } from "@juego/shared";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Juego de la convención",
+  title: APP_NAME,
   description: "Escaneá el QR de alguien, charlen y descubran algo del otro.",
 };
 

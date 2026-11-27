@@ -5,6 +5,7 @@ import { Suspense, useState } from "react";
 import { gameErrorMessage } from "@juego/shared";
 import { getBrowserClient } from "@/lib/supabase-browser";
 import { buttonClass } from "@juego/shared/ui";
+import { Logo } from "@/components/ui";
 
 function LoginForm() {
   const router = useRouter();
@@ -79,8 +80,8 @@ function LoginForm() {
 export default function IngresarAdminPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4">
-      <p className="text-sm font-semibold uppercase tracking-wide text-brand">Juego de la convención</p>
-      <h1 className="mb-6 mt-1 text-2xl font-bold">Administración</h1>
+      <Logo className="h-12 w-auto self-start" />
+      <h1 className="mb-6 mt-3 text-2xl font-bold">Administración</h1>
       <Suspense>
         <LoginForm />
       </Suspense>

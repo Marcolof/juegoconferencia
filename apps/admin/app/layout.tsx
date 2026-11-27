@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { APP_NAME } from "@juego/shared";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Administración · Juego de la convención",
+  title: `Administración · ${APP_NAME}`,
   robots: { index: false, follow: false },
 };
 
