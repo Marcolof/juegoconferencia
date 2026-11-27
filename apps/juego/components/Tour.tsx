@@ -1,29 +1,25 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MessagesSquare, QrCode, Trophy, Users, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui";
+import { TourScene } from "@/components/TourScene";
 import { pressableClass } from "@juego/shared/ui";
 
-/** Pasos del tour de bienvenida (F34, R83). Íconos de Lucide (F35). */
-const STEPS: readonly { icon: LucideIcon; title: string; text: string }[] = [
+/** Pasos del tour de bienvenida (F34, R83). Cada uno lleva una ilustración animada (F51). */
+const STEPS: readonly { title: string; text: string }[] = [
   {
-    icon: Users,
     title: "Conocé gente nueva",
     text: "El objetivo es charlar con personas de la convención y descubrir algo de cada una. Cada vez que adivinás una respuesta, sumás 1 punto.",
   },
   {
-    icon: QrCode,
     title: "Mostrá o escaneá un QR",
     text: "Con «Escanear QR» leés el código de otra persona y empieza el encuentro. Con «Mostrar mi QR» dejás que te escaneen a vos. Cada pareja juega una sola vez.",
   },
   {
-    icon: MessagesSquare,
     title: "Charlá y elegí",
     text: "Vas a ver una pregunta sobre la otra persona con 3 opciones: una es la verdadera. Preguntale y elegí. Después le toca a ella con una pregunta sobre vos. Tienen 5 minutos.",
   },
   {
-    icon: Trophy,
     title: "Mirá tu progreso",
     text: "Abajo, en «Mi progreso», ves tus encuentros y tus puntos; en «Jugadores», a todas las personas que participan. Tus respuestas las podés cambiar con «Mis respuestas» mientras el juego no esté en curso.",
   },
@@ -53,17 +49,17 @@ export function Tour({ open, onClose }: { open: boolean; onClose: () => void }) 
 
   if (!open) return null;
   const step = STEPS[i];
-  const Icon = step.icon;
   const last = i === STEPS.length - 1;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="tour-title"
     >
-      <div className="w-full max-w-md rounded-3xl bg-surface p-6 shadow-xl">
+      {/* Casi toda la altura de la pantalla: la ilustración animada ocupa lo que dejan los textos (F51). */}
+      <div className="flex h-[calc(100dvh-1.5rem)] max-h-[860px] w-full max-w-md flex-col rounded-3xl bg-surface p-5 shadow-xl sm:h-[calc(100dvh-2rem)] sm:p-6">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted">
             {i + 1} de {STEPS.length}
@@ -75,10 +71,10 @@ export function Tour({ open, onClose }: { open: boolean; onClose: () => void }) 
           )}
         </div>
 
-        <div aria-hidden className="mt-4 grid size-14 place-items-center rounded-2xl bg-brand-soft text-brand">
-          <Icon size={28} />
+        <div className="mt-3 min-h-0 flex-1 overflow-hidden rounded-2xl bg-illus">
+          <TourScene key={i} step={i} />
         </div>
-        <h2 id="tour-title" ref={titleRef} tabIndex={-1} className="mt-3 text-xl font-bold outline-none">
+        <h2 id="tour-title" ref={titleRef} tabIndex={-1} className="mt-4 text-xl font-bold outline-none">
           {step.title}
         </h2>
         <p className="mt-2 text-base leading-relaxed text-muted">{step.text}</p>

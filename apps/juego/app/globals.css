@@ -12,6 +12,8 @@
   --color-line: #e3e0f0;
   --color-surface: #ffffff;
   --color-canvas: #f6f5fb;
+  /* Fondo de las ilustraciones del tour (F51). */
+  --color-illus: #f1ecfb;
   --color-ok: #0f8a5f;
   --color-ok-soft: #e3f6ee;
   --color-bad: #c23b3b;
@@ -59,6 +61,160 @@ body {
 }
 .pop-in {
   animation: pop-in 0.5s ease-out both;
+}
+
+/* ---------- Escenas animadas del tour (F51) ----------
+   Los elementos con origen en píxeles lo reciben en coordenadas del SVG (viewBox 360×300).
+   Las escenas de dos planos alternan cada 8 s: general (a) y detalle de los teléfonos (b). */
+.ts-c {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes ts-enter {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.ts-enter { animation: ts-enter 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+@keyframes ts-twinkle {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+.ts-twinkle { animation: ts-twinkle 3s ease-in-out infinite both; }
+
+@keyframes ts-blink {
+  0%, 100% { opacity: 0; }
+  40%, 70% { opacity: 1; }
+}
+.ts-blink { animation: ts-blink 0.9s ease-in-out infinite; }
+
+@keyframes ts-sway {
+  from { transform: rotate(-6deg); }
+  to { transform: rotate(6deg); }
+}
+.ts-sway { animation: ts-sway 1.4s ease-in-out infinite alternate both; }
+
+@keyframes ts-nod {
+  0%, 100% { transform: rotate(0); }
+  50% { transform: rotate(3deg); }
+}
+.ts-nod { animation: ts-nod 2.4s ease-in-out infinite both; }
+
+@keyframes ts-bubble {
+  0%, 4% { opacity: 0; transform: scale(0.4); }
+  10%, 42% { opacity: 1; transform: scale(1); }
+  48%, 100% { opacity: 0; transform: scale(0.4); }
+}
+.ts-bubble {
+  transform-box: fill-box;
+  animation: ts-bubble 4.8s ease-out infinite both;
+}
+
+@keyframes ts-dot {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-3px); }
+}
+.ts-dot { animation: ts-dot 1s ease-in-out infinite both; }
+
+@keyframes ts-rise {
+  0% { opacity: 0; transform: translateY(8px) scale(0.6); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-28px) scale(1); }
+}
+.ts-rise {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ts-rise 3.2s ease-out infinite both;
+}
+
+@keyframes ts-shot-a {
+  0%, 40% { opacity: 1; transform: scale(1); }
+  47%, 93% { opacity: 0; transform: scale(1.25); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes ts-shot-b {
+  0%, 40% { opacity: 0; transform: scale(0.9); }
+  47%, 93% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.9); }
+}
+.ts-shot-a { animation: ts-shot-a 8s ease-in-out infinite both; }
+.ts-shot-b { animation: ts-shot-b 8s ease-in-out infinite both; }
+
+@keyframes ts-scan {
+  0%, 48% { opacity: 0; transform: translateY(0); }
+  50% { opacity: 1; }
+  58% { transform: translateY(54px); }
+  66% { transform: translateY(0); }
+  74% { opacity: 1; transform: translateY(54px); }
+  76%, 100% { opacity: 0; transform: translateY(54px); }
+}
+.ts-scan { animation: ts-scan 8s linear infinite both; }
+
+@keyframes ts-check {
+  0%, 76% { opacity: 0; transform: scale(0.3); }
+  80% { opacity: 1; transform: scale(1.12); }
+  83%, 92% { opacity: 1; transform: scale(1); }
+  96%, 100% { opacity: 0; transform: scale(1); }
+}
+.ts-check { animation: ts-check 8s ease-out infinite both; }
+
+@keyframes ts-opt {
+  0%, 49% { opacity: 0; transform: translateX(-6px); }
+  55%, 100% { opacity: 1; transform: none; }
+}
+.ts-opt { animation: ts-opt 8s ease-out infinite both; }
+
+@keyframes ts-picked {
+  0%, 67% { opacity: 0; }
+  70%, 93% { opacity: 1; }
+  97%, 100% { opacity: 0; }
+}
+.ts-picked { animation: ts-picked 8s ease-out infinite both; }
+
+@keyframes ts-tap {
+  0%, 63% { opacity: 0; transform: scale(0.2); }
+  65% { opacity: 0.55; }
+  72%, 100% { opacity: 0; transform: scale(1.9); }
+}
+.ts-tap { animation: ts-tap 8s ease-out infinite both; }
+
+@keyframes ts-spin {
+  to { transform: rotate(360deg); }
+}
+.ts-spin { animation: ts-spin 1s linear infinite; }
+
+@keyframes ts-bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-6px) rotate(1deg); }
+}
+.ts-bob { animation: ts-bob 3.2s ease-in-out infinite both; }
+
+@keyframes ts-plus {
+  0% { opacity: 0; transform: translateY(4px) scale(0.6); }
+  25% { opacity: 1; transform: translateY(0) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-14px) scale(1); }
+}
+.ts-plus { animation: ts-plus 0.9s ease-out both; }
+
+@keyframes ts-msg {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.ts-msg { animation: ts-msg 0.4s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ts,
+  .ts * {
+    animation: none !important;
+  }
+  .ts-shot-a,
+  .ts-scan,
+  .ts-tap,
+  .ts-rise,
+  .ts-blink,
+  .ts-plus {
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
