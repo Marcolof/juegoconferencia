@@ -37,8 +37,8 @@ export default function IngresarPage() {
 
   return (
     <Screen>
-      <div className="mb-8 mt-6">
-        <h1>
+      <div className="mb-8 mt-6 text-center">
+        <h1 className="flex justify-center">
           <Logo className="h-16 w-auto" />
         </h1>
         <p className="mt-3 text-muted">
