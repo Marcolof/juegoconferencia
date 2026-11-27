@@ -94,24 +94,21 @@ function Bubble({ x, y, d = 0, tail = "left", children }: { x: number; y: number
   );
 }
 
-/**
- * Mano abierta que gesticula, con la palma hacia arriba. En coordenadas propias la muñeca
- * está en (0, 0), los dedos apuntan hacia +x y el pulgar hacia -y; `flip` lo pasa abajo.
+/*
+ * Manos dibujadas por Marco (F51): `public/hand 1.svg`, `hand 2.svg`,
+ * `SVG HAND PALMA.svg` y `SVG HAND PULGAR.svg`. Se copian acá como trazados para
+ * poder ubicarlas y animarlas dentro de la escena.
  */
-function Hand({ x, y, r, s = 1, flip = false }: { x: number; y: number; r: number; s?: number; flip?: boolean }) {
-  const finger = { fill: C.skin, stroke: C.skinShade, strokeWidth: 0.7 / s };
+const HAND_BACK = "M21.6602 68.1035L17.9619 66.2645C15.3028 64.9422 12.1809 66.8764 12.1809 69.8461L12.1809 123.548L15.4654 150.321C17.3817 165.942 28.2801 178.988 43.311 183.653L46.5637 184.662C59.3619 188.635 73.2989 185.934 83.6874 177.469L91.6338 170.995C104.492 160.518 116.458 148.993 127.411 136.538L168.326 90.0137C170.508 87.5328 170.995 83.988 169.563 81.0105C167.331 76.3686 161.432 74.8935 157.278 77.9384L121.35 104.272C120.403 104.966 119.242 103.742 119.984 102.833L158.35 55.8709C160.632 53.0773 160.876 49.1387 158.956 46.0846C156.047 41.4554 149.56 40.7951 145.777 44.7429L103.308 89.0623C102.489 89.9171 101.125 88.8988 101.72 87.8759C112.769 68.907 127.894 43.0174 135.478 30.042C138.081 25.5879 136.5 19.8742 131.985 17.3789C127.882 15.1115 122.73 16.2982 120.032 20.1319L77.9433 79.9476C77.2739 80.8989 75.794 80.1339 76.1831 79.0377L94.9458 26.1754C96.4052 22.0637 94.7307 17.4956 90.9598 15.3011C86.2494 12.56 80.2023 14.5618 78.058 19.5722L40.9448 106.289C40.5726 107.159 39.313 107.073 39.0614 106.161L32.035 80.6927C30.5231 75.2125 26.7505 70.6347 21.6602 68.1035Z";
+const HAND_FRONT = "M127.779 48.6386L128.838 47.4795C130.972 45.1447 134.844 46.0939 135.656 49.151L140.564 67.6202C144.285 81.6237 146.987 95.8784 148.648 110.272L148.932 112.732C150.396 125.426 145.027 137.947 134.821 145.636C123.988 153.798 109.489 155.184 97.3059 149.222L73.2123 137.432L18.7765 103.246C16.3473 101.72 15.0712 98.8858 15.5397 96.0558C16.2905 91.5207 21.079 88.876 25.3173 90.6555L51.7226 101.742C52.8209 102.203 53.6605 100.702 52.6927 100.007L17.834 74.9936C15.0473 72.9939 13.715 69.5296 14.4437 66.1779C15.7001 60.3988 22.2791 57.5825 27.328 60.6624L65.5285 83.9657C66.5473 84.5872 67.5656 83.2745 66.6948 82.4586C53.3552 69.9598 35.1963 53.8136 26.6829 46.2866C23.7957 43.734 22.7603 39.6936 24.0571 36.0645C26.2842 29.8321 34.084 27.7929 39.0764 32.1378L82.5492 69.9728C83.4422 70.75 84.7064 69.605 84.0212 68.6396L59.7895 34.5019C57.2869 30.9762 57.7317 26.1517 60.8368 23.1431C64.4512 19.6409 70.2668 19.8984 73.5575 23.7063L120.784 78.3557C121.39 79.0566 122.541 78.6282 122.541 77.7018V62.1323C122.541 57.1382 124.409 52.3248 127.779 48.6386Z";
+const HAND_PALM = "M258.733 133.887L153.669 490.453C115.682 619.37 227.529 742.818 359.558 717.697C403.845 709.271 439.648 676.688 452.198 633.388L494.086 488.867L545.013 257.154C552.392 223.579 548.031 188.489 532.657 157.742L509.594 111.615C488.104 68.6359 445.436 40.2749 397.489 37.1001C334.287 32.9153 276.636 73.1284 258.733 133.887Z";
+const HAND_THUMB = "M95.9466 561.067L149.2 632.693C163.417 651.816 185.418 663.608 209.214 664.86C279.896 668.58 320.255 585.452 273.614 532.212L171.706 415.884C171.666 415.839 171.632 415.788 171.605 415.734L129.165 332.142C126.864 327.609 126.375 322.369 127.799 317.488L129.995 309.958C142.606 266.72 140.253 220.49 123.317 178.755L121.784 174.977C114.832 157.844 90.3468 158.511 84.3376 175.998L30.2621 333.356C24.7868 349.289 24.4813 366.544 29.3891 382.66L65.1206 499.999C71.8125 521.974 82.2404 542.632 95.9466 561.067Z";
+
+/** Mano que gesticula. (wx, wy) es la muñeca dentro del dibujo original; se apoya en (x, y). */
+function GestureHand({ d, x, y, wx, wy, r, s }: { d: string; x: number; y: number; wx: number; wy: number; r: number; s: number }) {
   return (
-    <g transform={`translate(${x} ${y}) rotate(${r}) scale(${s} ${flip ? -s : s})`}>
-      {/* dedos: índice, medio, anular y meñique, apenas abiertos en abanico */}
-      <rect x="9" y="-6.6" width="14" height="3.6" rx="1.8" transform="rotate(-9 9 -4.8)" {...finger} />
-      <rect x="9" y="-2.9" width="16" height="3.6" rx="1.8" transform="rotate(-2 9 -1.1)" {...finger} />
-      <rect x="9" y="0.8" width="15" height="3.6" rx="1.8" transform="rotate(5 9 2.6)" {...finger} />
-      <rect x="8" y="4.3" width="12" height="3.3" rx="1.65" transform="rotate(12 8 6)" {...finger} />
-      {/* palma */}
-      <path d="M-2 -5.5 Q4 -7.5 11 -6.4 Q13.5 0 11 7.6 Q4 8.6 -2 6.2 Z" fill={C.skin} />
-      {/* pulgar */}
-      <rect x="2" y="-12.5" width="11" height="4" rx="2" transform="rotate(-38 4 -8)" {...finger} />
-      <path d="M1 -6 Q5 -9 9 -7" stroke={C.skin} strokeWidth="3" fill="none" />
+    <g transform={`translate(${x} ${y}) rotate(${r}) scale(${s}) translate(${-wx} ${-wy})`}>
+      <path d={d} fill="#F8B7C2" stroke="#EEA6A7" strokeWidth="4" />
     </g>
   );
 }
@@ -357,7 +354,7 @@ function SceneMeet() {
       <g className="ts-sway" style={{ ...origin(232, 112), ...delay(-0.7) }}>
         <path d="M232 112 L222 148 L200 128" stroke={C.lilac} strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         <line x1="207" y1="134.4" x2="203.3" y2="131" stroke={C.white} strokeWidth="12.5" />
-        <Hand x={202} y={129} r={-140} s={0.95} flip />
+        <GestureHand d={HAND_FRONT} x={201} y={129} wx={128} wy={140} r={-7} s={0.204} />
       </g>
 
       {/* Él, de espaldas en primer plano */}
@@ -375,9 +372,10 @@ function SceneMeet() {
       <path d="M-40 236 Q50 206 102 232" stroke={C.lilacDark} strokeWidth="3" fill="none" opacity="0.6" />
       {/* su brazo que gesticula */}
       <g className="ts-sway" style={origin(126, 236)}>
+        {/* la mano va detrás del brazo; la manga termina redondeada */}
+        <GestureHand d={HAND_BACK} x={168} y={182} wx={55} wy={182} r={12} s={0.29} />
         <path d="M126 236 L170 178" stroke={C.purple} strokeWidth="22" strokeLinecap="round" />
         <line x1="157.7" y1="194.2" x2="161.3" y2="189.4" stroke={C.white} strokeWidth="22.5" />
-        <Hand x={169} y={180} r={-48} s={1.45} />
       </g>
 
       <Bubble x={184} y={30} tail="right" />
@@ -480,8 +478,11 @@ function SceneProgress() {
       <g className="ts-bob" style={origin(180, 300)}>
         <path d="M118 700 L180 262" stroke={C.purple} strokeWidth="56" />
         <path d="M173.6 307 L175 297" stroke={C.white} strokeWidth="56.5" />
-        {/* palma detrás del teléfono: se ve el talón de la mano debajo */}
-        <path d="M140 206 Q134 262 160 280 Q180 290 202 280 Q228 262 224 206 Z" fill={C.skin} />        <g transform="translate(128 36)">
+        {/* palma (detrás del teléfono) y pulgar (delante), dibujados por Marco sobre el mismo lienzo */}
+        <g transform="translate(100 84) scale(0.254)">
+          <path d={HAND_PALM} fill="#FEBBC3" />
+        </g>
+        <g transform="translate(128 36)">
           <rect width="104" height="190" rx="18" fill={C.hair} />
           <rect x="6" y="6" width="92" height="178" rx="13" fill={C.white} />
           <rect x="12" y="16" width="42" height="14" rx="7" fill={C.brand} />
@@ -527,21 +528,9 @@ function SceneProgress() {
             </g>
           ))}
         </g>
-        {/* dedos que abrazan el borde derecho */}
-        {[
-          { y: 134, len: 14 },
-          { y: 151, len: 15 },
-          { y: 168, len: 14 },
-          { y: 184, len: 11 },
-        ].map((f) => (
-          <path key={f.y} d={`M226 ${f.y} H${226 + f.len}`} stroke={C.skin} strokeWidth="14" strokeLinecap="round" />
-        ))}
-        {[142.5, 159.5, 176].map((y) => (
-          <path key={y} d={`M231 ${y} H${238}`} stroke={C.skinShade} strokeWidth="1.4" strokeLinecap="round" />
-        ))}
-        {/* pulgar sobre el borde izquierdo */}
-        <path d="M132 240 Q122 214 128 186 Q131 174 139 175 Q147 177 145 190 L141 216 Q140 230 146 242 Z" fill={C.skin} />
-        <path d="M134 186 Q138 180 142 184" stroke={C.skinShade} strokeWidth="1.4" fill="none" strokeLinecap="round" />
+        <g transform="translate(100 84) scale(0.254)">
+          <path d={HAND_THUMB} fill="#FEBBC3" />
+        </g>
       </g>
     </g>
   );
